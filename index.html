@@ -1,1371 +1,982 @@
 <!DOCTYPE html>
-<html lang="en" class="dark">
+<html lang="en" class="h-full dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gemini Autonomous Web & Realtime Problem Solver Studio v3.5</title>
+    <title>Gemini Web Engine & Agent Workspace</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-    
     <script>
         tailwind.config = {
             darkMode: 'class',
             theme: {
                 extend: {
-                    fontFamily: {
-                        sans: ['Plus Jakarta Sans', 'sans-serif'],
-                        mono: ['JetBrains Mono', 'monospace'],
-                    },
                     colors: {
                         gemini: {
-                            50: '#f0f4f9',
-                            100: '#e1e9f5',
-                            800: '#1e1f20',
-                            900: '#131314',
-                            950: '#0e0e0f',
-                            blue: '#1a73e8',
-                            purple: '#a855f7',
-                            sparkle: '#4285f4'
-                        }
-                    },
-                    animation: {
-                        'pulse-glow': 'pulseGlow 3s infinite ease-in-out',
-                        'gradient-x': 'gradientX 6s ease infinite',
-                        'spin-slow': 'spin 8s linear infinite',
-                    },
-                    keyframes: {
-                        pulseGlow: {
-                            '0%, 100%': { opacity: '0.6', transform: 'scale(1)' },
-                            '50%': { opacity: '1', transform: 'scale(1.03)' }
-                        },
-                        gradientX: {
-                            '0%, 100%': { 'background-size': '200% 200%', 'background-position': 'left center' },
-                            '50%': { 'background-size': '200% 200%', 'background-position': 'right center' }
+                            50: '#f0f4ff',
+                            100: '#e0e9ff',
+                            500: '#4285f4',
+                            600: '#2b6cb0',
+                            700: '#1a365d',
+                            800: '#0f172a',
+                            900: '#0a0f1d',
+                            accent: '#8ab4f8'
                         }
                     }
                 }
             }
         }
     </script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Marked JS for Markdown -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <!-- Highlight.js for Code Highlighting -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/styles/atom-one-dark.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/highlight.min.js"></script>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
     <style>
-        ::-webkit-scrollbar { width: 6px; height: 6px; }
-        ::-webkit-scrollbar-track { background: rgba(19, 19, 20, 0.5); }
-        ::-webkit-scrollbar-thumb { background: #333537; border-radius: 9999px; }
-        ::-webkit-scrollbar-thumb:hover { background: #444746; }
-        
-        .gemini-gradient-text {
-            background: linear-gradient(135deg, #4285f4 0%, #9b51e0 50%, #e91e63 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
         }
-
-        .gemini-glass {
-            background: rgba(30, 31, 32, 0.75);
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
+        code, pre {
+            font-family: 'JetBrains Mono', monospace;
+        }
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(15, 23, 42, 0.6);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #334155;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #475569;
+        }
+        /* Pulsing Glow Effect */
+        .glow-blue {
+            box-shadow: 0 0 20px -3px rgba(66, 133, 244, 0.3);
+        }
+        .glow-purple {
+            box-shadow: 0 0 20px -3px rgba(168, 85, 247, 0.3);
+        }
+        .glass-panel {
+            background: rgba(15, 23, 42, 0.75);
+            backdrop-filter: blur(12px);
             border: 1px solid rgba(255, 255, 255, 0.08);
-        }
-
-        .light-theme {
-            background-color: #f8f9fa !important;
-            color: #1f1f1f !important;
-        }
-        .light-theme aside, .light-theme header, .light-theme .bg-gemini-950 {
-            background-color: #ffffff !important;
-            border-color: #e3e3e3 !important;
-            color: #1f1f1f !important;
-        }
-        .light-theme .bg-gemini-900, .light-theme .bg-gemini-800\/40 {
-            background-color: #f0f4f9 !important;
-            border-color: #e0e0e0 !important;
-            color: #1f1f1f !important;
-        }
-        .light-theme .text-gray-400, .light-theme .text-gray-300 {
-            color: #444746 !important;
         }
     </style>
 </head>
-<body id="bodyRoot" class="bg-gemini-900 text-gray-100 font-sans min-h-screen flex flex-col antialiased overflow-hidden transition-colors duration-300">
+<body class="bg-slate-950 text-slate-100 h-full flex flex-col overflow-hidden antialiased selection:bg-blue-500 selection:text-white">
 
-    <!-- App Container -->
-    <div id="app" class="flex flex-col h-screen w-full relative overflow-hidden">
-        
-        <header class="h-14 border-b border-gray-800/80 px-4 flex items-center justify-between bg-gemini-950 z-30 shrink-0">
-            <div class="flex items-center gap-3">
-                <button id="toggleSidebarBtn" class="p-2 rounded-full hover:bg-gray-800 text-gray-300 hover:text-white transition-colors" title="Toggle Sidebar">
-                    <i class="fa-solid fa-bars text-lg"></i>
-                </button>
+    <!-- Top Navigation Bar -->
+    <header class="h-14 border-b border-slate-800 bg-slate-900/90 backdrop-blur px-4 flex items-center justify-between z-20 shrink-0">
+        <div class="flex items-center gap-3">
+            <div class="h-9 w-9 rounded-xl bg-gradient-to-tr from-blue-600 via-indigo-500 to-cyan-400 flex items-center justify-center shadow-lg shadow-blue-500/20">
+                <i class="fa-solid font-bold text-white text-lg">✦</i>
+            </div>
+            <div>
                 <div class="flex items-center gap-2">
-                    <span class="flex items-center justify-center w-7 h-7 rounded-lg bg-gradient-to-tr from-blue-600 via-purple-600 to-pink-500 text-white font-bold text-sm shadow-md">
-                        <i class="fa-solid fa-sparkles"></i>
-                    </span>
-                    <span class="font-bold text-lg tracking-tight flex items-center gap-1.5">
-                        Gemini <span class="gemini-gradient-text font-extrabold text-sm uppercase px-2 py-0.5 rounded-full bg-blue-500/10 border border-blue-500/20">Studio 3.5 Ultimate</span>
-                    </span>
+                    <h1 class="font-bold text-base tracking-wide bg-gradient-to-r from-white via-slate-200 to-slate-400 bg-clip-text text-transparent">
+                        Gemini Web Agent <span class="text-xs text-blue-400 font-mono font-semibold px-2 py-0.5 rounded-full bg-blue-950/80 border border-blue-800/50">v3.1 Realtime</span>
+                    </h1>
                 </div>
             </div>
-
-            <!-- Header Controls & Mode Selectors -->
-            <div class="flex items-center gap-2 sm:gap-3">
-                <!-- Voice Assistant Speech Toggle -->
-                <button id="ttsToggleBtn" onclick="toggleTTSSpeech()" class="p-2 rounded-full hover:bg-gray-800 text-gray-400 hover:text-amber-400 transition-colors" title="Toggle Auto Speech Synthesis (TTS)">
-                    <i id="ttsIcon" class="fa-solid fa-volume-xmark text-base"></i>
-                </button>
-
-                <!-- Light / Dark Theme Switcher -->
-                <button onclick="toggleLightDarkMode()" class="p-2 rounded-full hover:bg-gray-800 text-gray-300 hover:text-yellow-400 transition-colors" title="Toggle Light/Dark Theme">
-                    <i id="themeIcon" class="fa-solid fa-moon text-base"></i>
-                </button>
-
-                <!-- Autonomy Mode Selector -->
-                <div class="hidden md:flex items-center gap-1.5 bg-gemini-800/60 p-1 rounded-full border border-gray-700/50 text-xs">
-                    <button id="modeStandard" onclick="setAutonomyMode('standard')" class="px-3 py-1 rounded-full font-medium transition-all bg-blue-600 text-white shadow-sm">
-                        <i class="fa-solid fa-comments mr-1"></i> Interactive
-                    </button>
-                    <button id="modeAuto" onclick="setAutonomyMode('autonomous')" class="px-3 py-1 rounded-full font-medium transition-all text-gray-400 hover:text-white">
-                        <i class="fa-solid fa-robot mr-1 text-purple-400"></i> Autonomous Agent Loop
-                    </button>
-                </div>
-
-                <!-- Grounding Indicator Badge -->
-                <div class="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-mono">
-                    <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
-                    <i class="fa-solid fa-globe text-xs"></i>
-                    <span class="hidden sm:inline">2026 Grounded</span>
-                </div>
-
-                <!-- Customizer / Settings Trigger -->
-                <button onclick="openSettingsModal()" class="p-2 rounded-full hover:bg-gray-800 text-gray-300 hover:text-white transition-colors" title="Studio Preferences & Tools">
-                    <i class="fa-solid fa-sliders text-base"></i>
-                </button>
-
-                <!-- Dual View Toggle -->
-                <button id="toggleSandboxBtn" onclick="toggleSandboxView()" class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gray-800 hover:bg-gray-700 text-xs font-semibold text-gray-200 border border-gray-700 transition-all shadow-sm">
-                    <i class="fa-solid fa-window-restore text-purple-400"></i>
-                    <span class="hidden sm:inline" id="sandboxBtnText">Split Web OS Sandbox</span>
-                </button>
-            </div>
-        </header>
-
-        <!-- Main Body: Sidebar + Dynamic Split Workspace -->
-        <div class="flex flex-1 w-full overflow-hidden relative">
-
-            <aside id="sidebar" class="w-64 bg-gemini-950 border-r border-gray-800 flex flex-col transition-all duration-300 z-20 shrink-0 absolute md:relative inset-y-0 left-0 -translate-x-full md:translate-x-0">
-                <div class="p-3">
-                    <button onclick="createNewSession()" class="w-full py-2.5 px-4 rounded-xl bg-gemini-800/80 hover:bg-gray-700 text-white font-medium text-sm flex items-center gap-3 transition-all border border-gray-700/60 shadow-sm hover:shadow-md">
-                        <i class="fa-solid fa-plus text-blue-400 text-base"></i>
-                        <span>New Task Workspace</span>
-                    </button>
-                </div>
-
-                <div class="px-3 py-1 space-y-1 text-xs text-gray-400">
-                    <div class="font-semibold uppercase px-2 text-[10px] tracking-wider text-gray-500 my-1">Studio Capabilities</div>
-                    <a href="#" onclick="switchTab('chats')" class="flex items-center gap-3 px-3 py-2 rounded-lg bg-gray-800/70 text-white font-medium">
-                        <i class="fa-solid fa-message text-blue-400"></i> Active Prompt Workspace
-                    </a>
-                    <a href="#" onclick="switchTab('image')" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-800/40 text-gray-400 hover:text-gray-200">
-                        <i class="fa-solid fa-image text-pink-400"></i> Imagen 4 / Flash Generation
-                    </a>
-                    <a href="#" onclick="switchTab('logs')" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-800/40 text-gray-400 hover:text-gray-200">
-                        <i class="fa-solid fa-terminal text-emerald-400"></i> Live Console & Debugger
-                    </a>
-                </div>
-
-                <div class="my-2 border-t border-gray-800/60"></div>
-
-                <!-- Chat History List -->
-                <div class="px-3 flex-1 overflow-y-auto space-y-1">
-                    <div class="flex items-center justify-between px-2 mb-2">
-                        <span class="font-semibold uppercase text-[10px] tracking-wider text-gray-500">Problem Sessions</span>
-                        <button onclick="clearAllSessions()" class="text-[10px] text-gray-500 hover:text-red-400">Clear All</button>
-                    </div>
-                    <div id="sessionHistory" class="space-y-1">
-                        <!-- Dynamic items -->
-                    </div>
-                </div>
-
-                <!-- System Status Footer -->
-                <div class="p-3 border-t border-gray-800 bg-gemini-950/80 text-xs text-gray-400 flex flex-col gap-1.5">
-                    <div class="flex items-center justify-between text-[11px]">
-                        <span class="text-gray-500">Engine Model:</span>
-                        <span class="font-mono text-blue-400 font-semibold">gemini-3-flash</span>
-                    </div>
-                    <div class="flex items-center justify-between text-[11px]">
-                        <span class="text-gray-500">TTS Audio Engine:</span>
-                        <span class="text-amber-400 font-semibold" id="ttsVoiceLabel">Zephyr (2.5)</span>
-                    </div>
-                    <div class="flex items-center justify-between text-[11px]">
-                        <span class="text-gray-500">Image Model:</span>
-                        <span class="text-pink-400 font-semibold">imagen-4.0</span>
-                    </div>
-                </div>
-            </aside>
-
-            <!-- Overlay for mobile sidebar -->
-            <div id="sidebarOverlay" onclick="toggleSidebar()" class="fixed inset-0 bg-black/60 backdrop-blur-xs z-10 hidden md:hidden"></div>
-
-            <main class="flex-1 flex w-full h-full overflow-hidden bg-gemini-900 relative">
-                
-                <!-- Chat & Problem Input Pane -->
-                <div id="chatPane" class="flex-1 flex flex-col h-full overflow-hidden w-full transition-all duration-300">
-                    
-                    <!-- Chat Messages Stream Area -->
-                    <div id="chatStream" class="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 space-y-6 max-w-4xl mx-auto w-full">
-                        
-                        <!-- Gemini Web Hero Welcome Screen -->
-                        <div id="heroScreen" class="flex flex-col items-center justify-center min-h-[60vh] text-center space-y-6">
-                            <div class="relative">
-                                <div class="w-16 h-16 rounded-2xl bg-gradient-to-tr from-blue-600 via-purple-600 to-pink-500 p-0.5 shadow-xl animate-pulse-glow">
-                                    <div class="w-full h-full bg-gemini-900 rounded-[14px] flex items-center justify-center">
-                                        <i class="fa-solid fa-sparkles text-3xl text-blue-400"></i>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="space-y-2 max-w-xl">
-                                <h1 class="text-3xl sm:text-4xl font-bold tracking-tight text-white">
-                                    Welcome to <span class="gemini-gradient-text">Gemini Autonomous Studio</span>
-                                </h1>
-                                <p class="text-gray-400 text-sm sm:text-base">
-                                    Execute complex tasks with web search grounding, native image generation, AI audio synthesis, and autonomous self-healing software development.
-                                </p>
-                            </div>
-
-                            <!-- Preset Task Cards -->
-                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full max-w-2xl pt-2">
-                                <button onclick="injectPrompt('Research 2026 quantum computing developments using realtime search, then output an executive summary and interactive data visualization widget.')" class="p-3.5 rounded-xl bg-gemini-800/40 hover:bg-gemini-800 border border-gray-800 hover:border-blue-500/40 text-left transition-all group">
-                                    <div class="flex items-center justify-between text-blue-400 text-sm font-semibold mb-1">
-                                        <span><i class="fa-solid fa-earth-americas mr-1.5"></i> Grounded Research & Widget</span>
-                                        <i class="fa-solid fa-arrow-right text-xs opacity-0 group-hover:opacity-100 transition-opacity"></i>
-                                    </div>
-                                    <p class="text-xs text-gray-400">Combines live Google search context with instant sandbox web UI.</p>
-                                </button>
-
-                                <button onclick="injectPrompt('Build an interactive WebGL 3D Solar System simulation single-file HTML web app with controls, audio synthesized narration, and custom CSS.')" class="p-3.5 rounded-xl bg-gemini-800/40 hover:bg-gemini-800 border border-gray-800 hover:border-purple-500/40 text-left transition-all group">
-                                    <div class="flex items-center justify-between text-purple-400 text-sm font-semibold mb-1">
-                                        <span><i class="fa-solid fa-cube text-xs mr-1.5"></i> 3D / Web App Engine</span>
-                                        <i class="fa-solid fa-arrow-right text-xs opacity-0 group-hover:opacity-100 transition-opacity"></i>
-                                    </div>
-                                    <p class="text-xs text-gray-400">Generates code & executes in real time inside the split Web OS sandbox.</p>
-                                </button>
-
-                                <button onclick="injectPrompt('Generate a stunning photorealistic 3D rendering image of a futuristic floating eco-city in space using Imagen 4.')" class="p-3.5 rounded-xl bg-gemini-800/40 hover:bg-gemini-800 border border-gray-800 hover:border-pink-500/40 text-left transition-all group">
-                                    <div class="flex items-center justify-between text-pink-400 text-sm font-semibold mb-1">
-                                        <span><i class="fa-solid fa-wand-magic-sparkles mr-1.5"></i> Imagen 4 Art Creation</span>
-                                        <i class="fa-solid fa-arrow-right text-xs opacity-0 group-hover:opacity-100 transition-opacity"></i>
-                                    </div>
-                                    <p class="text-xs text-gray-400">Calls Imagen 4 API directly to produce high-resolution visuals.</p>
-                                </button>
-
-                                <button onclick="injectPrompt('Autonomously design, simulate, test, and self-heal a complete JavaScript algorithms benchmark suite with live chart graphics.')" class="p-3.5 rounded-xl bg-gemini-800/40 hover:bg-gemini-800 border border-gray-800 hover:border-emerald-500/40 text-left transition-all group">
-                                    <div class="flex items-center justify-between text-emerald-400 text-sm font-semibold mb-1">
-                                        <span><i class="fa-solid fa-brain-circuit mr-1.5"></i> Recursive Problem Solver</span>
-                                        <i class="fa-solid fa-arrow-right text-xs opacity-0 group-hover:opacity-100 transition-opacity"></i>
-                                    </div>
-                                    <p class="text-xs text-gray-400">Decomposes problem, writes code, tests runtime, and self-corrects bugs.</p>
-                                </button>
-                            </div>
-                        </div>
-
-                    </div>
-
-                    <div class="p-3 sm:p-4 bg-gemini-950/90 border-t border-gray-800/80 backdrop-blur-md sticky bottom-0 z-20">
-                        <div class="max-w-4xl mx-auto space-y-2">
-                            
-                            <!-- Image Attachment Preview Bar -->
-                            <div id="imageAttachmentBar" class="hidden items-center gap-3 p-2 rounded-xl bg-gemini-900 border border-purple-500/30">
-                                <img id="attachedImagePreview" class="w-12 h-12 rounded-lg object-cover border border-gray-700" src="" alt="Attachment">
-                                <div class="flex-1 text-xs">
-                                    <div class="font-semibold text-purple-300">Image Attached for Gemini Multimodal Vision</div>
-                                    <div class="text-[10px] text-gray-400">Gemini 3 Flash will analyze image details</div>
-                                </div>
-                                <button onclick="clearAttachedImage()" class="p-1.5 text-gray-400 hover:text-red-400">
-                                    <i class="fa-solid fa-xmark"></i>
-                                </button>
-                            </div>
-
-                            <!-- Active Status Banner (Autonomous Mode Active) -->
-                            <div id="autonomyBanner" class="hidden items-center justify-between px-3 py-1.5 rounded-lg bg-purple-950/40 border border-purple-500/30 text-xs text-purple-300">
-                                <div class="flex items-center gap-2">
-                                    <span class="w-2 h-2 rounded-full bg-purple-400 animate-ping"></span>
-                                    <span class="font-medium"><i class="fa-solid fa-robot mr-1"></i> Autonomous Agent Active:</span>
-                                    <span id="bannerStepText" class="text-purple-200 font-mono">Decomposing problem...</span>
-                                </div>
-                                <button onclick="stopAutonomyLoop()" class="text-purple-400 hover:text-white underline text-[11px]">Abort Task</button>
-                            </div>
-
-                            <!-- Input Box Frame -->
-                            <div class="relative flex items-center bg-gemini-800/80 rounded-2xl border border-gray-700/70 focus-within:border-blue-500/80 focus-within:ring-2 focus-within:ring-blue-500/20 transition-all shadow-lg">
-                                <!-- Image Upload Trigger -->
-                                <input type="file" id="imageFileInput" accept="image/*" class="hidden" onchange="handleImageUpload(event)">
-                                <button onclick="document.getElementById('imageFileInput').click()" class="pl-3.5 pr-1 text-gray-400 hover:text-purple-400 transition-colors" title="Attach Image for Vision Analysis">
-                                    <i class="fa-solid fa-paperclip text-base"></i>
-                                </button>
-
-                                <textarea id="promptInput" rows="1" placeholder="Ask Gemini anything, generate images/audio, or describe a problem to solve autonomously..." 
-                                    class="w-full bg-transparent border-0 text-gray-100 placeholder-gray-400 text-sm focus:outline-none focus:ring-0 resize-none px-3 py-3.5 max-h-36 overflow-y-auto"
-                                    onkeydown="handleKeyDown(event)"></textarea>
-
-                                <div class="flex items-center gap-2 pr-3 shrink-0">
-                                    <!-- Image Generation Mode Toggle button -->
-                                    <button id="toggleImagenBtn" onclick="toggleImagenMode()" class="p-2 rounded-xl text-gray-400 hover:text-pink-400 transition-colors" title="Toggle Imagen 4 Generation Mode">
-                                        <i class="fa-solid fa-image text-base"></i>
-                                    </button>
-
-                                    <!-- Toggle Web Search Grounding button -->
-                                    <button id="toggleSearchGrounding" onclick="toggleSearch()" class="p-2 rounded-xl text-emerald-400 hover:bg-emerald-500/10 transition-colors" title="Google Search Grounding Enabled">
-                                        <i class="fa-solid fa-globe text-base"></i>
-                                    </button>
-
-                                    <!-- Send Prompt Button -->
-                                    <button id="sendBtn" onclick="submitPrompt()" class="p-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-md">
-                                        <i class="fa-solid fa-paper-plane-top text-sm"></i>
-                                    </button>
-                                </div>
-                            </div>
-
-                            <!-- Footer disclaimer & shortcuts -->
-                            <div class="flex items-center justify-between text-[11px] text-gray-500 px-1">
-                                <span>Powered by <span class="text-gray-400 font-semibold">Gemini 3 Flash, Imagen 4 & Speech Synthesizer</span></span>
-                                <span class="hidden sm:inline">Press <kbd class="px-1.5 py-0.5 rounded bg-gray-800 text-gray-300 font-mono text-[10px]">Shift + Enter</kbd> for newline</span>
-                            </div>
-                        </div>
-                    </div>
-
-                </div>
-
-                <div id="sandboxPane" class="w-1/2 border-l border-gray-800 flex flex-col h-full bg-gemini-950 transition-all duration-300 hidden">
-                    
-                    <!-- Sandbox OS Control Top Bar -->
-                    <div class="h-11 border-b border-gray-800 bg-gemini-900 px-3 flex items-center justify-between shrink-0">
-                        <div class="flex items-center gap-2 w-full max-w-md">
-                            <!-- Viewport Responsive Resizers -->
-                            <div class="flex items-center gap-1 bg-gemini-950 p-1 rounded-lg border border-gray-800">
-                                <button onclick="setSandboxViewport('desktop')" class="p-1 rounded hover:bg-gray-800 text-gray-300 text-xs" title="Desktop View"><i class="fa-solid fa-desktop"></i></button>
-                                <button onclick="setSandboxViewport('tablet')" class="p-1 rounded hover:bg-gray-800 text-gray-300 text-xs" title="Tablet View"><i class="fa-solid fa-tablet-screen-button"></i></button>
-                                <button onclick="setSandboxViewport('mobile')" class="p-1 rounded hover:bg-gray-800 text-gray-300 text-xs" title="Mobile View"><i class="fa-solid fa-mobile-screen"></i></button>
-                            </div>
-                            
-                            <!-- Virtual URL Bar -->
-                            <div class="flex-1 flex items-center gap-2 px-3 py-1 bg-gemini-950 border border-gray-800 rounded-lg text-xs font-mono text-gray-300 overflow-hidden">
-                                <i class="fa-solid fa-lock text-emerald-400 text-[10px]"></i>
-                                <span id="sandboxUrl" class="truncate">sandbox://gemini-app.internal</span>
-                            </div>
-                        </div>
-
-                        <!-- Sandbox Quick Tools -->
-                        <div class="flex items-center gap-1">
-                            <button onclick="downloadSandboxCode()" class="p-1.5 rounded-lg hover:bg-gray-800 text-gray-400 hover:text-white text-xs" title="Export HTML File">
-                                <i class="fa-solid fa-download"></i>
-                            </button>
-                            <button onclick="refreshSandbox()" class="p-1.5 rounded-lg hover:bg-gray-800 text-gray-400 hover:text-white text-xs" title="Reload Execution Frame">
-                                <i class="fa-solid fa-rotate-right"></i>
-                            </button>
-                            <button onclick="toggleSandboxCodeView()" class="p-1.5 rounded-lg hover:bg-gray-800 text-gray-400 hover:text-white text-xs" title="Toggle Code / Inspector">
-                                <i class="fa-solid fa-code"></i>
-                            </button>
-                            <button onclick="toggleConsoleDrawer()" class="p-1.5 rounded-lg hover:bg-gray-800 text-gray-400 hover:text-emerald-400 text-xs" title="Toggle Developer Logs Console">
-                                <i class="fa-solid fa-terminal"></i>
-                            </button>
-                            <button onclick="toggleSandboxView()" class="p-1.5 rounded-lg hover:bg-gray-800 text-gray-400 hover:text-white text-xs" title="Close Frame">
-                                <i class="fa-solid fa-xmark"></i>
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- Sandbox Frame Wrapper -->
-                    <div id="sandboxViewportWrapper" class="flex-1 relative overflow-hidden bg-white dark:bg-gemini-950 flex justify-center items-center">
-                        <!-- Live Interactive Web Preview IFrame -->
-                        <iframe id="sandboxIframe" class="w-full h-full border-0 bg-white transition-all" sandbox="allow-scripts allow-modals allow-forms allow-same-origin"></iframe>
-                        
-                        <!-- Raw Code Inspector Overlay -->
-                        <div id="sandboxCodeViewer" class="absolute inset-0 bg-gemini-950 p-4 font-mono text-xs text-emerald-400 overflow-auto hidden">
-                            <textarea id="rawCodeEditor" class="w-full h-full bg-transparent border-0 text-emerald-400 font-mono text-xs focus:outline-none resize-none" oninput="liveUpdateFromEditor(this.value)"></textarea>
-                        </div>
-                    </div>
-
-                    <!-- Developer Logs & Console Drawer -->
-                    <div id="consoleDrawer" class="h-32 border-t border-gray-800 bg-gemini-950 p-2 font-mono text-[11px] overflow-y-auto flex flex-col hidden">
-                        <div class="flex items-center justify-between pb-1 mb-1 border-b border-gray-800 text-gray-400">
-                            <span class="font-bold text-emerald-400"><i class="fa-solid fa-terminal mr-1"></i> Sandbox Runtime Interceptor Console</span>
-                            <button onclick="clearConsoleLogs()" class="text-[10px] hover:text-white">Clear</button>
-                        </div>
-                        <div id="consoleLogsContainer" class="space-y-1 text-gray-300">
-                            <div class="text-gray-500">[System] Realtime log interceptor initialized.</div>
-                        </div>
-                    </div>
-
-                    <!-- Sandbox Status Bar -->
-                    <div class="h-7 border-t border-gray-800 bg-gemini-900 px-3 flex items-center justify-between text-[11px] text-gray-400 font-mono shrink-0">
-                        <span id="sandboxStatus" class="flex items-center gap-1.5">
-                            <span class="w-2 h-2 rounded-full bg-emerald-400"></span> Sandbox Live
-                        </span>
-                        <span>Isolated Browser OS Engine</span>
-                    </div>
-
-                </div>
-
-            </main>
         </div>
 
+        <!-- Mode Presets & Quick Actions -->
+        <div class="hidden md:flex items-center gap-2">
+            <button onclick="setAgentPreset('web_browser')" id="preset-web" class="preset-btn px-3 py-1.5 rounded-lg text-xs font-medium flex items-center gap-1.5 bg-blue-600/20 border border-blue-500/40 text-blue-300 hover:bg-blue-600/30 transition">
+                <i class="fa-solid fa-globe text-blue-400"></i> Autonomous Web Agent
+            </button>
+            <button onclick="setAgentPreset('code_developer')" id="preset-code" class="preset-btn px-3 py-1.5 rounded-lg text-xs font-medium flex items-center gap-1.5 bg-slate-800 border border-slate-700 text-slate-300 hover:bg-slate-700 transition">
+                <i class="fa-solid fa-code text-emerald-400"></i> Full-Stack Web Creator
+            </button>
+            <button onclick="setAgentPreset('researcher')" id="preset-research" class="preset-btn px-3 py-1.5 rounded-lg text-xs font-medium flex items-center gap-1.5 bg-slate-800 border border-slate-700 text-slate-300 hover:bg-slate-700 transition">
+                <i class="fa-solid fa-compass text-amber-400"></i> Deep Research Grounding
+            </button>
+        </div>
+
+        <!-- Right Header Actions -->
+        <div class="flex items-center gap-3">
+            <div class="hidden sm:flex items-center gap-2 text-xs font-mono px-3 py-1 bg-emerald-950/50 border border-emerald-800/40 rounded-full text-emerald-400">
+                <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                <span>API: Keyless Unlimited</span>
+            </div>
+
+            <button onclick="toggleCustomizer()" class="px-3 py-1.5 text-xs bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-lg text-slate-200 flex items-center gap-1.5 transition">
+                <i class="fa-solid fa-sliders text-blue-400"></i>
+                <span>Agent Settings</span>
+            </button>
+            <button onclick="clearChatSession()" title="Clear Chat Session" class="p-2 text-xs bg-slate-800 hover:bg-red-950/50 hover:text-red-400 border border-slate-700 hover:border-red-800/50 rounded-lg text-slate-400 transition">
+                <i class="fa-solid fa-trash-can"></i>
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Split Workspace Container -->
+    <div class="flex-1 flex overflow-hidden relative">
+
+        <!-- LEFT PANEL: Chat, Agent Stream & Input Desk -->
+        <div id="left-panel" class="w-full lg:w-1/2 flex flex-col h-full border-r border-slate-800/80 bg-slate-950 relative z-10 transition-all duration-300">
+
+            <!-- Grounding Search Status Bar -->
+            <div id="search-status-bar" class="hidden bg-slate-900/90 border-b border-blue-900/30 px-4 py-2 flex items-center justify-between text-xs text-slate-300">
+                <div class="flex items-center gap-2">
+                    <i class="fa-solid fa-magnifying-glass text-blue-400 animate-spin"></i>
+                    <span id="search-status-text">Searching Google for real-time web knowledge...</span>
+                </div>
+                <span class="font-mono text-slate-500">Google Grounding Active</span>
+            </div>
+
+            <!-- Messages Log -->
+            <div id="chat-messages" class="flex-1 overflow-y-auto p-4 space-y-4">
+                <!-- Welcome Banner -->
+                <div class="bg-gradient-to-br from-slate-900 via-slate-900 to-blue-950/40 border border-slate-800 rounded-2xl p-5 shadow-xl relative overflow-hidden">
+                    <div class="absolute -right-10 -bottom-10 w-40 h-40 bg-blue-500/10 rounded-full blur-3xl pointer-events-none"></div>
+                    <div class="flex items-start gap-4">
+                        <div class="p-3 bg-blue-600/20 border border-blue-500/30 rounded-xl text-blue-400 text-xl">
+                            <i class="fa-solid fa-robot"></i>
+                        </div>
+                        <div class="flex-1">
+                            <h2 class="text-base font-bold text-white mb-1">Welcome to Gemini Web Engine Agent</h2>
+                            <p class="text-xs text-slate-300 leading-relaxed mb-3">
+                                You are using an unconstrained Gemini agent interface with direct live web access, real-time Google search grounding, and a dual-pane sandbox to build and preview dynamic websites, tools, and research inline.
+                            </p>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+                                <button onclick="quickPrompt('Research the latest web development trends in 2026 with real-time web search and summarize key breakthroughs.')" class="text-left p-2 rounded-lg bg-slate-800/60 hover:bg-slate-800 border border-slate-700/60 text-slate-300 transition">
+                                    <span class="text-blue-400 font-semibold block">🔍 Live Search Grounding</span>
+                                    Research 2026 web technology breakthroughs
+                                </button>
+                                <button onclick="quickPrompt('Create a fully working, beautifully styled interactive Crypto & Stock Analytics Dashboard web app with live charts, search bar, and sleek dark UI.')" class="text-left p-2 rounded-lg bg-slate-800/60 hover:bg-slate-800 border border-slate-700/60 text-slate-300 transition">
+                                    <span class="text-emerald-400 font-semibold block">⚡ Interactive Website Builder</span>
+                                    Generate live Crypto Analytics Web App
+                                </button>
+                                <button onclick="quickPrompt('Search for top news regarding artificial intelligence today, extract sources, and draft a high-impact summary.')" class="text-left p-2 rounded-lg bg-slate-800/60 hover:bg-slate-800 border border-slate-700/60 text-slate-300 transition">
+                                    <span class="text-amber-400 font-semibold block">🌐 Real-Time Web Digest</span>
+                                    Live AI News Breakdown with links
+                                </button>
+                                <button onclick="quickPrompt('Generate a futuristic Sci-Fi cyberpunk cityscape banner image with vibrant glowing neon lights.')" class="text-left p-2 rounded-lg bg-slate-800/60 hover:bg-slate-800 border border-slate-700/60 text-slate-300 transition">
+                                    <span class="text-purple-400 font-semibold block">🎨 AI Image Generator</span>
+                                    Generate cyberpunk cityscape visualization
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Input Area Panel -->
+            <div class="p-3 border-t border-slate-800/80 bg-slate-900/70 backdrop-blur relative">
+                <!-- Grounding Toggle & Controls -->
+                <div class="flex items-center justify-between mb-2 px-1 text-xs text-slate-400">
+                    <div class="flex items-center gap-3">
+                        <label class="flex items-center gap-1.5 cursor-pointer hover:text-slate-200 transition">
+                            <input type="checkbox" id="toggle-search" checked class="accent-blue-500 rounded">
+                            <span class="flex items-center gap-1">
+                                <i class="fa-solid fa-magnifying-glass text-blue-400 text-[10px]"></i>
+                                Realtime Web Search Grounding
+                            </span>
+                        </label>
+                        <label class="flex items-center gap-1.5 cursor-pointer hover:text-slate-200 transition">
+                            <input type="checkbox" id="toggle-auto-preview" checked class="accent-emerald-500 rounded">
+                            <span class="flex items-center gap-1">
+                                <i class="fa-solid fa-play text-emerald-400 text-[10px]"></i>
+                                Auto-Render HTML Preview
+                            </span>
+                        </label>
+                    </div>
+
+                    <span id="char-count" class="font-mono text-[10px] text-slate-500">0 / 4000</span>
+                </div>
+
+                <!-- Input Box Container -->
+                <div class="relative bg-slate-950 border border-slate-800 focus-within:border-blue-500 rounded-xl transition shadow-inner">
+                    <textarea 
+                        id="user-input" 
+                        rows="3" 
+                        placeholder="Ask anything, request real-time search, or describe a web app/website to generate..." 
+                        class="w-full bg-transparent px-3 py-2.5 text-sm text-slate-100 placeholder-slate-500 focus:outline-none resize-none"
+                        onkeydown="handleKeyDown(event)"
+                        oninput="updateCharCount()"
+                    ></textarea>
+
+                    <div class="flex items-center justify-between px-3 py-1.5 border-t border-slate-900 bg-slate-950/60 rounded-b-xl">
+                        <div class="flex items-center gap-1.5">
+                            <button onclick="document.getElementById('image-upload').click()" title="Attach Image for Visual Analysis" class="p-1.5 hover:bg-slate-800 rounded-lg text-slate-400 hover:text-blue-400 transition text-xs flex items-center gap-1">
+                                <i class="fa-solid fa-image"></i>
+                                <span class="hidden sm:inline text-[11px]">Attach Image</span>
+                            </button>
+                            <input type="file" id="image-upload" accept="image/*" class="hidden" onchange="handleImageAttached(event)">
+
+                            <button onclick="triggerImageGenPrompt()" title="Generate AI Image" class="p-1.5 hover:bg-slate-800 rounded-lg text-slate-400 hover:text-purple-400 transition text-xs flex items-center gap-1">
+                                <i class="fa-solid fa-wand-magic-sparkles"></i>
+                                <span class="hidden sm:inline text-[11px]">Gen Image</span>
+                            </button>
+                        </div>
+
+                        <div class="flex items-center gap-2">
+                            <span id="attached-image-badge" class="hidden px-2 py-0.5 bg-blue-950 text-blue-300 text-[10px] rounded border border-blue-800 flex items-center gap-1">
+                                <i class="fa-solid fa-paperclip"></i>
+                                <span>Image attached</span>
+                                <i onclick="clearAttachedImage()" class="fa-solid fa-xmark hover:text-red-400 cursor-pointer ml-1"></i>
+                            </span>
+
+                            <button id="send-btn" onclick="sendMessage()" class="px-4 py-1.5 bg-blue-600 hover:bg-blue-500 text-white font-medium text-xs rounded-lg flex items-center gap-1.5 transition shadow-lg shadow-blue-600/30">
+                                <span>Send Agent Command</span>
+                                <i class="fa-solid fa-paper-plane text-[10px]"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- RIGHT PANEL: Live Web Preview, Code Sandbox & Grounding Inspector -->
+        <div id="right-panel" class="hidden lg:flex w-1/2 flex-col h-full bg-slate-900 border-l border-slate-800 relative">
+
+            <!-- Panel Header Tabs -->
+            <div class="h-11 border-b border-slate-800 bg-slate-950 px-3 flex items-center justify-between shrink-0">
+                <div class="flex items-center gap-1">
+                    <button onclick="switchTab('preview')" id="tab-btn-preview" class="tab-btn px-3 py-1.5 rounded-lg text-xs font-medium flex items-center gap-1.5 bg-slate-800 text-blue-400 border border-slate-700">
+                        <i class="fa-solid fa-desktop"></i>
+                        <span>Live Preview Workspace</span>
+                    </button>
+                    <button onclick="switchTab('code')" id="tab-btn-code" class="tab-btn px-3 py-1.5 rounded-lg text-xs font-medium flex items-center gap-1.5 bg-transparent text-slate-400 hover:bg-slate-900">
+                        <i class="fa-solid fa-code"></i>
+                        <span>Source Code</span>
+                    </button>
+                    <button onclick="switchTab('grounding')" id="tab-btn-grounding" class="tab-btn px-3 py-1.5 rounded-lg text-xs font-medium flex items-center gap-1.5 bg-transparent text-slate-400 hover:bg-slate-900">
+                        <i class="fa-solid fa-satellite-dish"></i>
+                        <span>Search Grounding (<span id="source-count">0</span>)</span>
+                    </button>
+                </div>
+
+                <!-- Preview Controls -->
+                <div id="preview-controls" class="flex items-center gap-1.5">
+                    <!-- Responsive Screen Mode Switches -->
+                    <div class="bg-slate-900 border border-slate-800 rounded-lg p-0.5 flex items-center text-[11px]">
+                        <button onclick="setViewport('desktop')" id="view-desktop" class="p-1 px-2 rounded bg-slate-800 text-blue-400 font-semibold" title="Desktop View">
+                            <i class="fa-solid fa-laptop"></i>
+                        </button>
+                        <button onclick="setViewport('tablet')" id="view-tablet" class="p-1 px-2 rounded text-slate-400 hover:text-slate-200" title="Tablet View">
+                            <i class="fa-solid fa-tablet-screen-button"></i>
+                        </button>
+                        <button onclick="setViewport('mobile')" id="view-mobile" class="p-1 px-2 rounded text-slate-400 hover:text-slate-200" title="Mobile View">
+                            <i class="fa-solid fa-mobile-screen"></i>
+                        </button>
+                    </div>
+
+                    <button onclick="refreshPreview()" title="Refresh Frame" class="p-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg text-xs transition">
+                        <i class="fa-solid fa-rotate-right"></i>
+                    </button>
+                    <button onclick="openPreviewInNewTab()" title="Open Live Webpage in New Tab" class="p-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg text-xs transition">
+                        <i class="fa-solid fa-arrow-up-right-from-square"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Tab Content Views -->
+            <div class="flex-1 relative overflow-hidden bg-slate-950 flex justify-center items-center">
+
+                <!-- 1. Live Preview Sandbox View -->
+                <div id="view-content-preview" class="w-full h-full flex justify-center items-center p-2 transition-all">
+                    <div id="viewport-frame-wrapper" class="w-full h-full rounded-xl overflow-hidden border border-slate-800 bg-white shadow-2xl transition-all duration-300 relative">
+                        <iframe id="preview-iframe" class="w-full h-full border-0 bg-white" sandbox="allow-scripts allow-modals allow-forms allow-same-origin" title="Live Preview Engine"></iframe>
+                    </div>
+                </div>
+
+                <!-- 2. Code Editor View -->
+                <div id="view-content-code" class="hidden w-full h-full flex-col bg-slate-950">
+                    <div class="bg-slate-900 border-b border-slate-800 px-3 py-1.5 flex items-center justify-between text-xs">
+                        <span class="font-mono text-slate-400 flex items-center gap-1">
+                            <i class="fa-regular fa-file-code text-emerald-400"></i> generated_app.html
+                        </span>
+                        <div class="flex items-center gap-2">
+                            <button onclick="copyCodeToClipboard()" class="px-2 py-1 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded text-xs flex items-center gap-1 transition">
+                                <i class="fa-solid fa-copy text-blue-400"></i> Copy
+                            </button>
+                            <button onclick="downloadCodeFile()" class="px-2 py-1 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded text-xs flex items-center gap-1 transition">
+                                <i class="fa-solid fa-download text-emerald-400"></i> Export HTML
+                            </button>
+                        </div>
+                    </div>
+                    <pre class="flex-1 p-4 overflow-auto text-xs font-mono text-slate-200 bg-slate-950 selection:bg-blue-900"><code id="code-display" class="language-html"><!-- Generated HTML code will appear here... --></code></pre>
+                </div>
+
+                <!-- 3. Search Grounding & Sources Inspector View -->
+                <div id="view-content-grounding" class="hidden w-full h-full p-4 overflow-y-auto bg-slate-950 text-slate-300">
+                    <div class="max-w-2xl mx-auto space-y-4">
+                        <div class="bg-slate-900 border border-slate-800 rounded-xl p-4">
+                            <h3 class="font-bold text-slate-100 text-sm mb-1 flex items-center gap-2">
+                                <i class="fa-solid fa-satellite-dish text-blue-400"></i>
+                                Realtime Search Grounding Sources
+                            </h3>
+                            <p class="text-xs text-slate-400">
+                                Web data retrieved directly from Google Search for accurate up-to-date analysis.
+                            </p>
+                        </div>
+
+                        <div id="grounding-sources-list" class="space-y-2">
+                            <div class="text-center text-xs text-slate-500 py-8">
+                                <i class="fa-solid fa-globe text-2xl mb-2 opacity-40 block"></i>
+                                No search citations retrieved yet for current session. Ask a question requiring real-time web info!
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Workspace Footer Status Bar -->
+            <div class="h-7 border-t border-slate-800 bg-slate-950 px-3 flex items-center justify-between text-[11px] font-mono text-slate-500 shrink-0">
+                <div class="flex items-center gap-2">
+                    <span class="w-2 h-2 rounded-full bg-blue-500"></span>
+                    <span id="preview-status">Preview Engine Ready</span>
+                </div>
+                <div>
+                    <span>Gemini Web Engine & Dynamic Sandbox</span>
+                </div>
+            </div>
+
+        </div>
     </div>
 
-    <div id="settingsModal" class="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 hidden">
-        <div class="bg-gemini-900 border border-gray-800 rounded-2xl w-full max-w-xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
-            <div class="px-6 py-4 border-b border-gray-800 flex items-center justify-between bg-gemini-950">
-                <div class="flex items-center gap-2">
+    <!-- Customizer & System Persona Modal -->
+    <div id="customizer-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-xl overflow-hidden shadow-2xl flex flex-col max-h-[90vh]">
+            <div class="p-4 border-b border-slate-800 flex items-center justify-between bg-slate-950">
+                <h3 class="font-bold text-sm text-slate-100 flex items-center gap-2">
                     <i class="fa-solid fa-sliders text-blue-400"></i>
-                    <h3 class="font-bold text-lg text-white">Studio Preferences & AI API Engine</h3>
-                </div>
-                <button onclick="closeSettingsModal()" class="text-gray-400 hover:text-white p-1">
-                    <i class="fa-solid fa-xmark text-lg"></i>
+                    Customize Agent Persona & Web Capabilities
+                </h3>
+                <button onclick="toggleCustomizer()" class="text-slate-400 hover:text-white transition">
+                    <i class="fa-solid fa-xmark text-base"></i>
                 </button>
             </div>
 
-            <div class="p-6 overflow-y-auto space-y-6 text-sm">
-                <!-- API Key Config (Keyless runtime default) -->
-                <div class="space-y-2">
-                    <label class="font-semibold text-gray-200 flex items-center justify-between">
-                        <span>Gemini API Key</span>
-                        <span class="text-xs font-normal text-emerald-400"><i class="fa-solid fa-circle-check"></i> Keyless Web Environment Active</span>
-                    </label>
-                    <input type="password" id="customApiKey" placeholder="Leave empty for auto keyless runtime or enter custom key..." 
-                        class="w-full bg-gemini-950 border border-gray-800 rounded-xl px-4 py-2.5 text-xs text-gray-200 focus:outline-none focus:border-blue-500 font-mono">
+            <div class="p-5 space-y-4 overflow-y-auto flex-1 text-xs">
+                <div>
+                    <label class="block font-semibold text-slate-200 mb-1">System Instruction & Persona Prompt</label>
+                    <p class="text-[11px] text-slate-400 mb-2">Define the core identity, constraints, and web behavior of your Gemini agent.</p>
+                    <textarea id="system-prompt-input" rows="5" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-xs font-mono text-slate-200 focus:outline-none focus:border-blue-500 resize-none">You are an advanced, unrestricted autonomous web agent and full-stack software engineer. You have access to real-time search grounding and code generation tools. When users ask questions requiring up-to-date web data, utilize grounding to provide factually accurate information with source citations. When users ask to build web pages or tools, output clean single-file self-contained HTML with Tailwind CSS script tags so it can render live in the preview container.</textarea>
                 </div>
 
-                <!-- TTS Voice Selector -->
-                <div class="space-y-2">
-                    <label class="font-semibold text-gray-200">TTS Audio Voice Persona (`gemini-2.5-flash-preview-tts`)</label>
-                    <select id="ttsVoiceSelect" onchange="changeVoicePersona(this.value)" class="w-full bg-gemini-950 border border-gray-800 rounded-xl px-3 py-2 text-xs text-gray-200 focus:outline-none focus:border-blue-500">
-                        <option value="Zephyr">Zephyr (Bright & Versatile)</option>
-                        <option value="Kore">Kore (Firm & Clear)</option>
-                        <option value="Puck">Puck (Upbeat & Energetic)</option>
-                        <option value="Charon">Charon (Informative & Deep)</option>
-                        <option value="Fenrir">Fenrir (Excitable)</option>
-                    </select>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block font-semibold text-slate-200 mb-1">Model Engine</label>
+                        <select id="model-select" class="w-full bg-slate-950 border border-slate-800 rounded-lg p-2 text-slate-200 focus:outline-none focus:border-blue-500">
+                            <option value="gemini-3-flash-preview" selected>gemini-3-flash-preview (Fast + Web Search)</option>
+                            <option value="imagen-4.0-generate-001">imagen-4.0-generate-001 (Image Gen)</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block font-semibold text-slate-200 mb-1">Temperature (<span id="temp-val">0.7</span>)</label>
+                        <input type="range" id="temperature-input" min="0" max="1" step="0.1" value="0.7" oninput="document.getElementById('temp-val').innerText = this.value" class="w-full accent-blue-500 mt-2">
+                    </div>
                 </div>
 
-                <!-- Autonomous Execution Engine Parameters -->
-                <div class="space-y-3 pt-2 border-t border-gray-800">
-                    <h4 class="font-semibold text-gray-200 flex items-center gap-2">
-                        <i class="fa-solid fa-microchip text-purple-400"></i> Autonomous Agent Parameters
-                    </h4>
-                    
+                <div class="border-t border-slate-800 pt-3">
+                    <h4 class="font-semibold text-slate-200 mb-2">Autonomous Web Behaviors</h4>
                     <div class="space-y-2">
-                        <div class="flex justify-between text-xs text-gray-300">
-                            <span>Max Iterative Self-Healing Loop Depth</span>
-                            <span id="healingDepthVal" class="font-mono text-purple-400">4 Loops</span>
-                        </div>
-                        <input type="range" id="healingDepthSlider" min="1" max="8" value="4" oninput="document.getElementById('healingDepthVal').textContent = this.value + ' Loops'" 
-                            class="w-full accent-purple-500 bg-gray-800 rounded-lg h-1.5 cursor-pointer">
+                        <label class="flex items-center gap-2 cursor-pointer">
+                            <input type="checkbox" id="setting-grounding" checked class="accent-blue-500 rounded">
+                            <span>Enable Google Search Grounding for real-time web facts</span>
+                        </label>
+                        <label class="flex items-center gap-2 cursor-pointer">
+                            <input type="checkbox" id="setting-auto-html" checked class="accent-blue-500 rounded">
+                            <span>Automatically extract and compile HTML artifacts to sandbox</span>
+                        </label>
                     </div>
-
-                    <div class="flex items-center justify-between py-1">
-                        <div>
-                            <div class="font-medium text-xs text-gray-200">Auto-execute Code in Web OS Sandbox</div>
-                            <div class="text-[11px] text-gray-500">Renders HTML/JS immediately upon synthesis</div>
-                        </div>
-                        <input type="checkbox" id="autoExecuteCheck" checked class="w-4 h-4 rounded border-gray-800 text-blue-600 focus:ring-0 accent-blue-600 cursor-pointer">
-                    </div>
-
-                    <div class="flex items-center justify-between py-1">
-                        <div>
-                            <div class="font-medium text-xs text-gray-200">Google Search Grounding</div>
-                            <div class="text-[11px] text-gray-500">Query live 2026 web sources for facts</div>
-                        </div>
-                        <input type="checkbox" id="searchGroundingCheck" checked class="w-4 h-4 rounded border-gray-800 text-emerald-600 focus:ring-0 accent-emerald-600 cursor-pointer">
-                    </div>
-                </div>
-
-                <!-- System Instruction Customizer -->
-                <div class="space-y-2 pt-2 border-t border-gray-800">
-                    <label class="font-semibold text-gray-200">System Persona Instruction Prompt</label>
-                    <textarea id="systemPromptInput" rows="3" class="w-full bg-gemini-950 border border-gray-800 rounded-xl px-3 py-2 text-xs text-gray-200 focus:outline-none focus:border-blue-500 font-mono">You are Gemini Autonomous Studio 3.5, an AI problem solver. Search the live web for factual grounding, generate clean sandboxed web apps, write executable code, synthesize images and spoken audio, critique your own reasoning, and recursively solve complex challenges.</textarea>
                 </div>
             </div>
 
-            <div class="px-6 py-3 bg-gemini-950 border-t border-gray-800 flex justify-end gap-2">
-                <button onclick="closeSettingsModal()" class="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-medium text-xs transition-colors">
-                    Save Studio Settings
+            <div class="p-3 border-t border-slate-800 bg-slate-950 flex justify-end gap-2">
+                <button onclick="toggleCustomizer()" class="px-4 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg text-xs transition">
+                    Done
                 </button>
             </div>
         </div>
     </div>
 
     <script>
-        let state = {
-            autonomyMode: 'standard', // 'standard' or 'autonomous'
-            imagenMode: false,
-            searchGrounding: true,
-            isProcessing: false,
-            ttsSpeechEnabled: false,
-            selectedVoice: 'Zephyr',
-            autonomyLoopActive: false,
-            sandboxOpen: false,
-            sandboxCodeView: false,
-            activeSessionId: null,
-            attachedImageData: null,
-            sessions: [],
-            chatHistory: [],
-            maxSelfHealDepth: 4,
-            autoExecute: true
+        // Keyless API Configuration (per instructions, apiKey is empty string for runtime injection)
+        const apiKey = "";
+        
+        // Application State
+        let chatHistory = [];
+        let currentGeneratedCode = "";
+        let attachedImageBase64 = null;
+        let attachedImageMime = "image/png";
+        let isProcessing = false;
+        let searchSources = [];
+
+        // DOM Element Cache
+        const chatMessages = document.getElementById('chat-messages');
+        const userInput = document.getElementById('user-input');
+        const searchStatusBar = document.getElementById('search-status-bar');
+        const searchStatusText = document.getElementById('search-status-text');
+        const previewIframe = document.getElementById('preview-iframe');
+        const codeDisplay = document.getElementById('code-display');
+        const sourcesList = document.getElementById('grounding-sources-list');
+        const sourceCount = document.getElementById('source-count');
+
+        // Agent System Presets
+        const AGENT_PRESETS = {
+            web_browser: {
+                prompt: "You are an Autonomous Web Agent with real-time web access. When asked about current topics, news, financial market rates, or live data, search the web to return accurate up-to-date facts with interactive sources. If requested to design web portals, return full single-file HTML/CSS/JS.",
+                search: true
+            },
+            code_developer: {
+                prompt: "You are a master Full-Stack Web Developer. Whenever the user requests a website, dashboard, app, or tool, you generate complete, modern, beautifully styled single-file HTML code using Tailwind CSS script tags and clean JavaScript. Enclose all code strictly inside standard html code blocks.",
+                search: true
+            },
+            researcher: {
+                prompt: "You are a Deep Web Research Agent. Conduct thorough search grounding for complex topics, synthesize detailed reports, provide bulleted insights, and list all web citations clearly.",
+                search: true
+            }
         };
 
-        // DOM Element References
-        const chatStream = document.getElementById('chatStream');
-        const promptInput = document.getElementById('promptInput');
-        const sendBtn = document.getElementById('sendBtn');
-        const heroScreen = document.getElementById('heroScreen');
-        const sandboxPane = document.getElementById('sandboxPane');
-        const sandboxIframe = document.getElementById('sandboxIframe');
-        const rawCodeEditor = document.getElementById('rawCodeEditor');
-        const sandboxCodeViewer = document.getElementById('sandboxCodeViewer');
-        const sandboxUrl = document.getElementById('sandboxUrl');
-        const autonomyBanner = document.getElementById('autonomyBanner');
-        const bannerStepText = document.getElementById('bannerStepText');
-        const consoleDrawer = document.getElementById('consoleDrawer');
-        const consoleLogsContainer = document.getElementById('consoleLogsContainer');
-
+        // Initialize on Load
         window.addEventListener('DOMContentLoaded', () => {
-            createNewSession();
-            updateGroundingBadge();
-            
-            // Listen for postMessages from sandboxed iframe for developer console
-            window.addEventListener('message', (event) => {
-                if (event.data && event.data.type === 'SANDBOX_LOG') {
-                    appendConsoleLog(event.data.level, event.data.message);
-                }
+            marked.setOptions({
+                highlight: function(code, lang) {
+                    if (lang && hljs.getLanguage(lang)) {
+                        return hljs.highlight(code, { language: lang }).value;
+                    }
+                    return hljs.highlightAuto(code).value;
+                },
+                breaks: true
             });
+            
+            // Initial blank frame
+            updatePreviewFrame("<html><body style='background:#0f172a;color:#94a3b8;font-family:sans-serif;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;'><div style='text-align:center;'><h3>✦ Gemini Sandbox Active</h3><p style='font-size:13px;'>Generated websites or tools will render here live.</p></div></body></html>");
         });
 
-        function createNewSession() {
-            const sessionId = 'session_' + Date.now();
-            const newSession = {
-                id: sessionId,
-                title: 'New Studio Workspace',
-                messages: [],
-                timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+        // Set Preset Behavior
+        function setAgentPreset(presetKey) {
+            document.querySelectorAll('.preset-btn').forEach(btn => {
+                btn.classList.remove('bg-blue-600/20', 'border-blue-500/40', 'text-blue-300');
+                btn.classList.add('bg-slate-800', 'border-slate-700', 'text-slate-300');
+            });
+
+            const activeBtn = document.getElementById(`preset-${presetKey === 'web_browser' ? 'web' : presetKey === 'code_developer' ? 'code' : 'research'}`);
+            if (activeBtn) {
+                activeBtn.classList.remove('bg-slate-800', 'border-slate-700', 'text-slate-300');
+                activeBtn.classList.add('bg-blue-600/20', 'border-blue-500/40', 'text-blue-300');
+            }
+
+            const preset = AGENT_PRESETS[presetKey];
+            if (preset) {
+                document.getElementById('system-prompt-input').value = preset.prompt;
+                document.getElementById('toggle-search').checked = preset.search;
+                showToast(`Agent persona updated: ${presetKey.replace('_', ' ').toUpperCase()}`);
+            }
+        }
+
+        // Send Message Handler
+        async function sendMessage() {
+            const promptText = userInput.value.trim();
+            if ((!promptText && !attachedImageBase64) || isProcessing) return;
+
+            isProcessing = true;
+            document.getElementById('send-btn').disabled = true;
+            document.getElementById('send-btn').classList.add('opacity-50');
+
+            // Add User Message to UI
+            appendMessage('user', promptText, attachedImageBase64);
+
+            userInput.value = '';
+            updateCharCount();
+
+            // Prepare Payload for Gemini API
+            const enableSearch = document.getElementById('toggle-search').checked;
+            const systemInstructionText = document.getElementById('system-prompt-input').value;
+            const selectedModel = document.getElementById('model-select').value;
+
+            if (enableSearch) {
+                searchStatusBar.classList.remove('hidden');
+            }
+
+            // Create placeholder assistant message box
+            const assistantMsgId = 'msg-' + Date.now();
+            appendAssistantPlaceholder(assistantMsgId);
+
+            try {
+                // Exponential Backoff API Fetch
+                const responseData = await fetchGeminiWithBackoff(promptText, enableSearch, systemInstructionText, selectedModel);
+                
+                searchStatusBar.classList.add('hidden');
+
+                // Process Gemini Response Text and Sources
+                if (responseData && responseData.text) {
+                    let finalText = responseData.text;
+                    searchSources = responseData.sources || [];
+
+                    // Render search grounding sources
+                    renderGroundingSources(searchSources);
+
+                    // Update Assistant Message
+                    updateAssistantMessage(assistantMsgId, finalText, searchSources);
+
+                    // Check for HTML Code blocks to auto-render
+                    if (document.getElementById('toggle-auto-preview').checked) {
+                        const htmlCode = extractCodeBlock(finalText);
+                        if (htmlCode) {
+                            currentGeneratedCode = htmlCode;
+                            updatePreviewFrame(htmlCode);
+                            updateCodeView(htmlCode);
+                            
+                            // Make right panel visible on mobile if hidden
+                            document.getElementById('right-panel').classList.remove('hidden');
+                        }
+                    }
+
+                    // Save to history
+                    chatHistory.push({ role: 'user', parts: [{ text: promptText }] });
+                    chatHistory.push({ role: 'model', parts: [{ text: finalText }] });
+
+                } else if (responseData && responseData.imageUrl) {
+                    // Image generation response
+                    updateAssistantWithImage(assistantMsgId, responseData.imageUrl, promptText);
+                } else {
+                    updateAssistantMessage(assistantMsgId, "Unable to generate response. Please check connection.");
+                }
+
+            } catch (error) {
+                console.error("Gemini Request Error:", error);
+                searchStatusBar.classList.add('hidden');
+                updateAssistantMessage(assistantMsgId, `⚠️ Request Error: ${error.message || 'Failed to reach Gemini Service.'}`);
+            } finally {
+                isProcessing = false;
+                document.getElementById('send-btn').disabled = false;
+                document.getElementById('send-btn').classList.remove('opacity-50');
+                clearAttachedImage();
+            }
+        }
+
+        async function fetchGeminiWithBackoff(promptText, useSearch, systemInstruction, model) {
+            // Check if user requested image generation directly or model selected is imagen
+            if (model === 'imagen-4.0-generate-001' || promptText.toLowerCase().startsWith('generate image:')) {
+                return await fetchImagenGeneration(promptText);
+            }
+
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`;
+
+            // Build request parts
+            const parts = [];
+            if (promptText) {
+                parts.push({ text: promptText });
+            }
+
+            if (attachedImageBase64) {
+                parts.push({
+                    inlineData: {
+                        mimeType: attachedImageMime,
+                        data: attachedImageBase64
+                    }
+                });
+            }
+
+            const payload = {
+                contents: [{ parts: parts }],
+                systemInstruction: {
+                    parts: [{ text: systemInstruction }]
+                }
             };
-            state.sessions.unshift(newSession);
-            state.activeSessionId = sessionId;
-            state.chatHistory = [];
-            renderSessionHistory();
-            resetChatUI();
+
+            if (useSearch) {
+                payload.tools = [{ "google_search": {} }];
+            }
+
+            // Exponential backoff logic
+            let retries = 3;
+            let delay = 1000;
+
+            for (let i = 0; i < retries; i++) {
+                try {
+                    const response = await fetch(apiUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+
+                    if (response.ok) {
+                        const result = await response.json();
+                        const candidate = result.candidates?.[0];
+
+                        if (candidate && candidate.content?.parts?.[0]?.text) {
+                            const text = candidate.content.parts[0].text;
+                            let sources = [];
+                            
+                            const groundingMetadata = candidate.groundingMetadata;
+                            if (groundingMetadata && groundingMetadata.groundingAttributions) {
+                                sources = groundingMetadata.groundingAttributions
+                                    .map(attr => ({
+                                        uri: attr.web?.uri,
+                                        title: attr.web?.title || attr.web?.uri
+                                    }))
+                                    .filter(s => s.uri);
+                            }
+
+                            return { text, sources };
+                        }
+                    }
+
+                    if (response.status === 429) {
+                        // Rate limited, wait and retry
+                        await new Promise(res => setTimeout(res, delay));
+                        delay *= 2;
+                        continue;
+                    }
+
+                    const errBody = await response.text();
+                    throw new Error(`API Error ${response.status}: ${errBody}`);
+
+                } catch (err) {
+                    if (i === retries - 1) throw err;
+                    await new Promise(res => setTimeout(res, delay));
+                    delay *= 2;
+                }
+            }
+
+            throw new Error("Maximum retry limit exceeded.");
         }
 
-        function resetChatUI() {
-            chatStream.innerHTML = '';
-            chatStream.appendChild(heroScreen);
-            heroScreen.style.display = 'flex';
+        async function fetchImagenGeneration(promptText) {
+            const cleanPrompt = promptText.replace(/^generate image:\s*/i, '');
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/imagen-4.0-generate-001:predict?key=${apiKey}`;
+
+            const payload = {
+                instances: [{ prompt: cleanPrompt }],
+                parameters: { sampleCount: 1 }
+            };
+
+            const response = await fetch(apiUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            if (response.ok) {
+                const result = await response.json();
+                if (result.predictions && result.predictions[0]?.bytesBase64Encoded) {
+                    const imageUrl = `data:image/png;base64,${result.predictions[0].bytesBase64Encoded}`;
+                    return { imageUrl };
+                }
+            }
+
+            throw new Error("Image generation failed or returned invalid image payload.");
         }
 
-        function renderSessionHistory() {
-            const container = document.getElementById('sessionHistory');
-            container.innerHTML = state.sessions.map(s => `
-                <div onclick="loadSession('${s.id}')" class="px-3 py-2 rounded-lg text-xs font-medium cursor-pointer transition-colors flex items-center justify-between ${s.id === state.activeSessionId ? 'bg-gemini-800 text-white font-semibold' : 'text-gray-400 hover:bg-gray-800/50 hover:text-gray-200'}">
-                    <span class="truncate pr-2"><i class="fa-regular fa-message mr-2 opacity-70"></i>${escapeHtml(s.title)}</span>
-                    <span class="text-[10px] text-gray-500 font-mono">${s.timestamp}</span>
+        function appendMessage(role, text, imageBase64) {
+            const msgDiv = document.createElement('div');
+            msgDiv.className = 'flex gap-3 text-sm';
+
+            if (role === 'user') {
+                msgDiv.innerHTML = `
+                    <div class="w-8 h-8 rounded-xl bg-blue-600 flex items-center justify-center text-white shrink-0 font-bold text-xs">
+                        YOU
+                    </div>
+                    <div class="flex-1 bg-slate-900 border border-slate-800 rounded-2xl p-4 text-slate-200">
+                        ${imageBase64 ? `<img src="data:${attachedImageMime};base64,${imageBase64}" class="max-h-48 rounded-lg mb-2 border border-slate-700">` : ''}
+                        <p class="whitespace-pre-wrap">${escapeHtml(text)}</p>
+                    </div>
+                `;
+            }
+
+            chatMessages.appendChild(msgDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        function appendAssistantPlaceholder(id) {
+            const msgDiv = document.createElement('div');
+            msgDiv.id = id;
+            msgDiv.className = 'flex gap-3 text-sm';
+            msgDiv.innerHTML = `
+                <div class="w-8 h-8 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-500 flex items-center justify-center text-white shrink-0 font-bold text-xs shadow-md">
+                    ✦
+                </div>
+                <div class="flex-1 bg-slate-900/90 border border-slate-800 rounded-2xl p-4 text-slate-200 shadow-lg">
+                    <div class="flex items-center gap-2 text-xs text-blue-400 font-mono mb-2">
+                        <i class="fa-solid fa-spinner fa-spin"></i>
+                        <span>Gemini Web Agent is processing prompt & web knowledge...</span>
+                    </div>
+                    <div class="space-y-2 animate-pulse">
+                        <div class="h-3 bg-slate-800 rounded w-3/4"></div>
+                        <div class="h-3 bg-slate-800 rounded w-1/2"></div>
+                    </div>
+                </div>
+            `;
+            chatMessages.appendChild(msgDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        function updateAssistantMessage(id, text, sources = []) {
+            const container = document.getElementById(id);
+            if (!container) return;
+
+            const formattedMarkdown = marked.parse(text);
+
+            let sourcesHtml = '';
+            if (sources && sources.length > 0) {
+                sourcesHtml = `
+                    <div class="mt-4 pt-3 border-t border-slate-800 text-xs">
+                        <div class="font-semibold text-slate-400 mb-1.5 flex items-center gap-1.5">
+                            <i class="fa-solid fa-globe text-blue-400"></i> Grounded Web Sources:
+                        </div>
+                        <div class="flex flex-wrap gap-1.5">
+                            ${sources.map(s => `
+                                <a href="${s.uri}" target="_blank" class="px-2 py-1 bg-slate-800 hover:bg-slate-700 text-blue-300 rounded border border-slate-700/80 text-[11px] truncate max-w-[200px] inline-flex items-center gap-1">
+                                    <i class="fa-solid fa-arrow-up-right-from-square text-[9px]"></i>
+                                    ${escapeHtml(s.title || s.uri)}
+                                </a>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+            }
+
+            container.innerHTML = `
+                <div class="w-8 h-8 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-500 flex items-center justify-center text-white shrink-0 font-bold text-xs shadow-md">
+                    ✦
+                </div>
+                <div class="flex-1 bg-slate-900/90 border border-slate-800 rounded-2xl p-4 text-slate-200 shadow-lg overflow-x-auto">
+                    <div class="prose prose-invert max-w-none text-xs sm:text-sm leading-relaxed">
+                        ${formattedMarkdown}
+                    </div>
+                    ${sourcesHtml}
+                </div>
+            `;
+
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        function updateAssistantWithImage(id, imageUrl, prompt) {
+            const container = document.getElementById(id);
+            if (!container) return;
+
+            container.innerHTML = `
+                <div class="w-8 h-8 rounded-xl bg-gradient-to-tr from-purple-600 to-pink-500 flex items-center justify-center text-white shrink-0 font-bold text-xs shadow-md">
+                    🎨
+                </div>
+                <div class="flex-1 bg-slate-900/90 border border-slate-800 rounded-2xl p-4 text-slate-200 shadow-lg">
+                    <p class="text-xs font-semibold text-purple-300 mb-2">Generated AI Visual Artifact</p>
+                    <img src="${imageUrl}" class="w-full max-h-96 object-cover rounded-xl border border-slate-700 shadow-2xl mb-3">
+                    <div class="flex items-center justify-between text-xs text-slate-400">
+                        <span class="truncate italic">"${escapeHtml(prompt)}"</span>
+                        <a href="${imageUrl}" download="gemini-generated-image.png" class="px-3 py-1 bg-purple-950 hover:bg-purple-900 border border-purple-800 text-purple-200 rounded-lg flex items-center gap-1">
+                            <i class="fa-solid fa-download"></i> Save Image
+                        </a>
+                    </div>
+                </div>
+            `;
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        function extractCodeBlock(text) {
+            // Match ```html ... ``` or general ``` ... ``` block containing <!DOCTYPE or <html
+            const htmlRegex = /```html\s*([\s\S]*?)\s*```/i;
+            const match = text.match(htmlRegex);
+            if (match && match[1]) {
+                return match[1];
+            }
+
+            const genericRegex = /```\s*([\s\S]*?)\s*```/;
+            const genericMatch = text.match(genericRegex);
+            if (genericMatch && genericMatch[1] && (genericMatch[1].includes('<html') || genericMatch[1].includes('<!DOCTYPE'))) {
+                return genericMatch[1];
+            }
+
+            return null;
+        }
+
+        function updatePreviewFrame(htmlCode) {
+            const iframeDoc = previewIframe.contentDocument || previewIframe.contentWindow.document;
+            iframeDoc.open();
+            iframeDoc.write(htmlCode);
+            iframeDoc.close();
+            document.getElementById('preview-status').innerText = 'Live Preview Updated';
+        }
+
+        function updateCodeView(htmlCode) {
+            codeDisplay.textContent = htmlCode;
+            hljs.highlightElement(codeDisplay);
+        }
+
+        function renderGroundingSources(sources) {
+            sourceCount.innerText = sources.length;
+            if (!sources || sources.length === 0) {
+                sourcesList.innerHTML = `
+                    <div class="text-center text-xs text-slate-500 py-8">
+                        <i class="fa-solid fa-globe text-2xl mb-2 opacity-40 block"></i>
+                        No search citations retrieved for this response.
+                    </div>
+                `;
+                return;
+            }
+
+            sourcesList.innerHTML = sources.map((s, idx) => `
+                <div class="bg-slate-900 border border-slate-800 rounded-xl p-3 flex items-start gap-3 hover:border-slate-700 transition">
+                    <span class="w-6 h-6 rounded-lg bg-blue-950 text-blue-400 font-mono text-xs flex items-center justify-center shrink-0 border border-blue-800">
+                        ${idx + 1}
+                    </span>
+                    <div class="flex-1 overflow-hidden">
+                        <h4 class="font-semibold text-slate-200 text-xs truncate mb-0.5">${escapeHtml(s.title || s.uri)}</h4>
+                        <a href="${s.uri}" target="_blank" class="text-blue-400 text-[11px] hover:underline truncate block">
+                            ${escapeHtml(s.uri)}
+                        </a>
+                    </div>
                 </div>
             `).join('');
         }
 
-        function clearAllSessions() {
-            state.sessions = [];
-            createNewSession();
-        }
-
-        function loadSession(sessionId) {
-            state.activeSessionId = sessionId;
-            const session = state.sessions.find(s => s.id === sessionId);
-            if (!session) return;
-
-            renderSessionHistory();
-            chatStream.innerHTML = '';
-
-            if (session.messages.length === 0) {
-                chatStream.appendChild(heroScreen);
-                heroScreen.style.display = 'flex';
-                return;
-            }
-
-            heroScreen.style.display = 'none';
-            session.messages.forEach(msg => {
-                appendMessageToUI(msg.role, msg.text, msg.sources, msg.codeArtifact, msg.imageUrl, msg.audioUrl);
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('bg-slate-800', 'text-blue-400', 'border', 'border-slate-700');
+                btn.classList.add('bg-transparent', 'text-slate-400');
             });
-            scrollToBottom();
+
+            const activeBtn = document.getElementById(`tab-btn-${tabName}`);
+            if (activeBtn) {
+                activeBtn.classList.remove('bg-transparent', 'text-slate-400');
+                activeBtn.classList.add('bg-slate-800', 'text-blue-400', 'border', 'border-slate-700');
+            }
+
+            document.getElementById('view-content-preview').classList.add('hidden');
+            document.getElementById('view-content-code').classList.add('hidden');
+            document.getElementById('view-content-grounding').classList.add('hidden');
+
+            document.getElementById(`view-content-${tabName}`).classList.remove('hidden');
         }
 
-        function toggleLightDarkMode() {
-            const body = document.getElementById('bodyRoot');
-            const icon = document.getElementById('themeIcon');
-            body.classList.toggle('light-theme');
+        function setViewport(mode) {
+            const wrapper = document.getElementById('viewport-frame-wrapper');
+            const btns = ['desktop', 'tablet', 'mobile'];
+            
+            btns.forEach(b => {
+                const btn = document.getElementById(`view-${b}`);
+                btn.classList.remove('bg-slate-800', 'text-blue-400', 'font-semibold');
+                btn.classList.add('text-slate-400');
+            });
 
-            if (body.classList.contains('light-theme')) {
-                icon.className = 'fa-solid fa-sun text-yellow-500';
-            } else {
-                icon.className = 'fa-solid fa-moon text-base';
+            const currentBtn = document.getElementById(`view-${mode}`);
+            currentBtn.classList.add('bg-slate-800', 'text-blue-400', 'font-semibold');
+
+            if (mode === 'desktop') {
+                wrapper.style.width = '100%';
+                wrapper.style.height = '100%';
+            } else if (mode === 'tablet') {
+                wrapper.style.width = '768px';
+                wrapper.style.height = '90%';
+            } else if (mode === 'mobile') {
+                wrapper.style.width = '375px';
+                wrapper.style.height = '80%';
             }
         }
 
-        function toggleTTSSpeech() {
-            state.ttsSpeechEnabled = !state.ttsSpeechEnabled;
-            const icon = document.getElementById('ttsIcon');
-            const btn = document.getElementById('ttsToggleBtn');
-
-            if (state.ttsSpeechEnabled) {
-                icon.className = 'fa-solid fa-volume-high text-amber-400';
-                btn.title = 'Speech Synthesis Active';
-            } else {
-                icon.className = 'fa-solid fa-volume-xmark text-gray-400';
-                btn.title = 'Speech Synthesis Disabled';
+        function refreshPreview() {
+            if (currentGeneratedCode) {
+                updatePreviewFrame(currentGeneratedCode);
             }
         }
 
-        function changeVoicePersona(voice) {
-            state.selectedVoice = voice;
-            document.getElementById('ttsVoiceLabel').textContent = `${voice} (2.5)`;
+        function openPreviewInNewTab() {
+            if (!currentGeneratedCode) return;
+            const newWindow = window.open();
+            newWindow.document.write(currentGeneratedCode);
+            newWindow.document.close();
         }
 
-        function toggleImagenMode() {
-            state.imagenMode = !state.imagenMode;
-            const btn = document.getElementById('toggleImagenBtn');
-            if (state.imagenMode) {
-                btn.className = 'p-2 rounded-xl text-pink-400 bg-pink-500/10 transition-colors';
-                btn.title = 'Imagen 4 Image Mode Enabled';
-            } else {
-                btn.className = 'p-2 rounded-xl text-gray-400 hover:text-pink-400 transition-colors';
-                btn.title = 'Standard Text/Code Mode';
-            }
+        function copyCodeToClipboard() {
+            if (!currentGeneratedCode) return;
+            navigator.clipboard.writeText(currentGeneratedCode).then(() => {
+                showToast("Source code copied to clipboard!");
+            });
         }
 
-        function handleImageUpload(e) {
-            const file = e.target.files[0];
+        function downloadCodeFile() {
+            if (!currentGeneratedCode) return;
+            const blob = new Blob([currentGeneratedCode], { type: 'text/html' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'gemini-agent-website.html';
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        function handleImageAttached(event) {
+            const file = event.target.files[0];
             if (!file) return;
 
+            attachedImageMime = file.type || "image/png";
             const reader = new FileReader();
-            reader.onload = (event) => {
-                const base64Data = event.target.result.split(',')[1];
-                state.attachedImageData = {
-                    mimeType: file.type,
-                    data: base64Data,
-                    previewUrl: event.target.result
-                };
-                
-                document.getElementById('attachedImagePreview').src = event.target.result;
-                document.getElementById('imageAttachmentBar').classList.remove('hidden');
-                document.getElementById('imageAttachmentBar').classList.add('flex');
+            reader.onload = function(e) {
+                const base64 = e.target.result.split(',')[1];
+                attachedImageBase64 = base64;
+                document.getElementById('attached-image-badge').classList.remove('hidden');
             };
             reader.readAsDataURL(file);
         }
 
         function clearAttachedImage() {
-            state.attachedImageData = null;
-            document.getElementById('imageAttachmentBar').classList.add('hidden');
-            document.getElementById('imageAttachmentBar').classList.remove('flex');
-            document.getElementById('imageFileInput').value = '';
+            attachedImageBase64 = null;
+            document.getElementById('image-upload').value = '';
+            document.getElementById('attached-image-badge').classList.add('hidden');
         }
 
-        function setAutonomyMode(mode) {
-            state.autonomyMode = mode;
-            const stdBtn = document.getElementById('modeStandard');
-            const autoBtn = document.getElementById('modeAuto');
+        function triggerImageGenPrompt() {
+            userInput.value = "Generate image: ";
+            userInput.focus();
+        }
 
-            if (mode === 'autonomous') {
-                stdBtn.className = 'px-3 py-1 rounded-full font-medium transition-all text-gray-400 hover:text-white';
-                autoBtn.className = 'px-3 py-1 rounded-full font-medium transition-all bg-purple-600 text-white shadow-sm';
-            } else {
-                stdBtn.className = 'px-3 py-1 rounded-full font-medium transition-all bg-blue-600 text-white shadow-sm';
-                autoBtn.className = 'px-3 py-1 rounded-full font-medium transition-all text-gray-400 hover:text-white';
+        function quickPrompt(text) {
+            userInput.value = text;
+            sendMessage();
+        }
+
+        function handleKeyDown(event) {
+            if (event.key === 'Enter' && !event.shiftKey) {
+                event.preventDefault();
+                sendMessage();
             }
         }
 
-        function toggleSearch() {
-            state.searchGrounding = !state.searchGrounding;
-            updateGroundingBadge();
+        function updateCharCount() {
+            const count = userInput.value.length;
+            document.getElementById('char-count').innerText = `${count} / 4000`;
         }
 
-        function updateGroundingBadge() {
-            const btn = document.getElementById('toggleSearchGrounding');
-            const check = document.getElementById('searchGroundingCheck');
-
-            if (state.searchGrounding) {
-                btn.className = 'p-2 rounded-xl text-emerald-400 hover:bg-emerald-500/10 transition-colors';
-                btn.title = 'Google Search Grounding Active';
-                if (check) check.checked = true;
-            } else {
-                btn.className = 'p-2 rounded-xl text-gray-500 hover:bg-gray-800 transition-colors';
-                btn.title = 'Google Search Grounding Disabled';
-                if (check) check.checked = false;
-            }
+        function toggleCustomizer() {
+            const modal = document.getElementById('customizer-modal');
+            modal.classList.toggle('hidden');
         }
 
-        function injectPrompt(text) {
-            promptInput.value = text;
-            promptInput.focus();
-            autoResizeTextarea(promptInput);
-        }
-
-        function handleKeyDown(e) {
-            if (e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault();
-                submitPrompt();
-            } else {
-                autoResizeTextarea(promptInput);
-            }
-        }
-
-        function autoResizeTextarea(el) {
-            el.style.height = 'auto';
-            el.style.height = Math.min(el.scrollHeight, 140) + 'px';
-        }
-
-        function toggleSandboxView() {
-            state.sandboxOpen = !state.sandboxOpen;
-            const btnText = document.getElementById('sandboxBtnText');
-
-            if (state.sandboxOpen) {
-                sandboxPane.classList.remove('hidden');
-                btnText.textContent = 'Hide Sandbox OS';
-            } else {
-                sandboxPane.classList.add('hidden');
-                btnText.textContent = 'Split Web OS Sandbox';
-            }
-        }
-
-        function setSandboxViewport(mode) {
-            const wrapper = document.getElementById('sandboxIframe');
-            if (mode === 'mobile') {
-                wrapper.style.width = '375px';
-                wrapper.style.height = '667px';
-                wrapper.style.borderRadius = '16px';
-                wrapper.style.boxShadow = '0 20px 25px -5px rgba(0,0,0,0.5)';
-            } else if (mode === 'tablet') {
-                wrapper.style.width = '768px';
-                wrapper.style.height = '1024px';
-                wrapper.style.borderRadius = '12px';
-            } else {
-                wrapper.style.width = '100%';
-                wrapper.style.height = '100%';
-                wrapper.style.borderRadius = '0px';
-            }
-        }
-
-        function toggleSandboxCodeView() {
-            state.sandboxCodeView = !state.sandboxCodeView;
-            if (state.sandboxCodeView) {
-                sandboxCodeViewer.classList.remove('hidden');
-            } else {
-                sandboxCodeViewer.classList.add('hidden');
-            }
-        }
-
-        function toggleConsoleDrawer() {
-            consoleDrawer.classList.toggle('hidden');
-        }
-
-        function appendConsoleLog(level, msg) {
-            const div = document.createElement('div');
-            const color = level === 'error' ? 'text-red-400' : level === 'warn' ? 'text-amber-400' : 'text-gray-300';
-            div.className = `${color} truncate font-mono text-[11px]`;
-            div.textContent = `[${new Date().toLocaleTimeString()}] [${level.toUpperCase()}] ${msg}`;
-            consoleLogsContainer.appendChild(div);
-            consoleDrawer.scrollTop = consoleDrawer.scrollHeight;
-        }
-
-        function clearConsoleLogs() {
-            consoleLogsContainer.innerHTML = '';
-        }
-
-        function loadIntoSandbox(code, title = 'gemini-app') {
-            if (!state.sandboxOpen) {
-                toggleSandboxView();
-            }
-
-            rawCodeEditor.value = code;
-            sandboxUrl.textContent = `sandbox://${title.toLowerCase().replace(/\s+/g, '-')}.internal`;
-            
-            // Inject Console Interceptor Script into code
-            const consoleScript = `
-                <script>
-                    (function() {
-                        const _log = console.log;
-                        const _error = console.error;
-                        const _warn = console.warn;
-                        console.log = function(...args) {
-                            window.parent.postMessage({ type: 'SANDBOX_LOG', level: 'log', message: args.join(' ') }, '*');
-                            _log.apply(console, args);
-                        };
-                        console.error = function(...args) {
-                            window.parent.postMessage({ type: 'SANDBOX_LOG', level: 'error', message: args.join(' ') }, '*');
-                            _error.apply(console, args);
-                        };
-                        console.warn = function(...args) {
-                            window.parent.postMessage({ type: 'SANDBOX_LOG', level: 'warn', message: args.join(' ') }, '*');
-                            _warn.apply(console, args);
-                        };
-                    })();
-                <\/script>
-            `;
-
-            const fullCodeToInject = code.includes('<head>') 
-                ? code.replace('<head>', '<head>' + consoleScript) 
-                : consoleScript + code;
-
-            const doc = sandboxIframe.contentWindow.document;
-            doc.open();
-            doc.write(fullCodeToInject);
-            doc.close();
-
-            document.getElementById('sandboxStatus').innerHTML = `<span class="w-2 h-2 rounded-full bg-emerald-400"></span> Live Execution Active`;
-        }
-
-        function liveUpdateFromEditor(val) {
-            loadIntoSandbox(val);
-        }
-
-        function refreshSandbox() {
-            const currentCode = rawCodeEditor.value;
-            if (currentCode) {
-                loadIntoSandbox(currentCode);
-            }
-        }
-
-        function downloadSandboxCode() {
-            const code = rawCodeEditor.value;
-            if (!code) return;
-            const blob = new Blob([code], { type: 'text/html' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = 'gemini-app-artifact.html';
-            a.click();
-        }
-
-        async function submitPrompt() {
-            const prompt = promptInput.value.trim();
-            if ((!prompt && !state.attachedImageData) || state.isProcessing) return;
-
-            if (heroScreen.parentElement) {
-                heroScreen.style.display = 'none';
-            }
-
-            state.isProcessing = true;
-            sendBtn.disabled = true;
-            promptInput.value = '';
-            promptInput.style.height = 'auto';
-
-            const activeSession = state.sessions.find(s => s.id === state.activeSessionId);
-            if (activeSession && activeSession.messages.length === 0) {
-                activeSession.title = prompt.length > 25 ? prompt.substring(0, 25) + '...' : 'Vision / Visual Prompt';
-                renderSessionHistory();
-            }
-
-            // User message representation
-            appendMessageToUI('user', prompt, [], null, state.attachedImageData?.previewUrl);
-            if (activeSession) {
-                activeSession.messages.push({ role: 'user', text: prompt, imageUrl: state.attachedImageData?.previewUrl });
-            }
-
-            // Construct parts for Gemini API
-            const userParts = [];
-            if (prompt) userParts.push({ text: prompt });
-            if (state.attachedImageData) {
-                userParts.push({
-                    inlineData: {
-                        mimeType: state.attachedImageData.mimeType,
-                        data: state.attachedImageData.data
-                    }
-                });
-            }
-
-            state.chatHistory.push({ role: 'user', parts: userParts });
-            clearAttachedImage();
-
-            if (state.imagenMode) {
-                await runImagenGeneration(prompt);
-            } else if (state.autonomyMode === 'autonomous') {
-                await runAutonomousProblemSolver(prompt);
-            } else {
-                await runStandardGeminiQuery(prompt);
-            }
-
-            state.isProcessing = false;
-            sendBtn.disabled = false;
-        }
-
-        async function callGeminiApi(history, systemInstruction = null) {
-            const customApiKey = document.getElementById('customApiKey')?.value.trim() || "";
-            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${customApiKey}`;
-            const defaultSystem = document.getElementById('systemPromptInput')?.value || "You are Gemini Autonomous Studio, a problem solver.";
-
-            const payload = {
-                contents: history,
-                systemInstruction: { parts: [{ text: systemInstruction || defaultSystem }] }
-            };
-
-            if (state.searchGrounding) {
-                payload.tools = [{ "google_search": {} }];
-            }
-
-            let response;
-            let retries = 0;
-            while (retries < 3) {
-                try {
-                    response = await fetch(apiUrl, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(payload)
-                    });
-                    if (response.ok) break;
-                } catch (e) {}
-                retries++;
-                await new Promise(r => setTimeout(r, Math.pow(2, retries) * 1000));
-            }
-
-            if (!response || !response.ok) {
-                throw new Error(`API Request failed with status ${response?.status || 'Network Error'}`);
-            }
-
-            const data = await response.json();
-            const candidate = data.candidates?.[0];
-            if (!candidate) throw new Error("No response returned.");
-
-            const text = candidate.content?.parts?.[0]?.text || "No text content.";
-            
-            let sources = [];
-            const groundingMetadata = candidate.groundingMetadata;
-            if (groundingMetadata && groundingMetadata.groundingAttributions) {
-                sources = groundingMetadata.groundingAttributions
-                    .map(attr => ({ uri: attr.web?.uri, title: attr.web?.title }))
-                    .filter(s => s.uri && s.title);
-            }
-
-            return { text, sources, rawCandidate: candidate };
-        }
-
-        async function runImagenGeneration(promptText) {
-            const loadingBubble = appendLoadingBubble("Calling Imagen 4 API to generate high-res visual...");
-            try {
-                const customApiKey = document.getElementById('customApiKey')?.value.trim() || "";
-                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/imagen-4.0-generate-001:predict?key=${customApiKey}`;
-                
-                const payload = {
-                    instances: [{ prompt: promptText }],
-                    parameters: { sampleCount: 1 }
-                };
-
-                const response = await fetch(apiUrl, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                });
-
-                loadingBubble.remove();
-
-                if (!response.ok) throw new Error("Imagen generation call failed.");
-                const data = await response.json();
-                
-                if (data.predictions && data.predictions[0]?.bytesBase64Encoded) {
-                    const imageUrl = `data:image/png;base64,${data.predictions[0].bytesBase64Encoded}`;
-                    const resText = `### 🎨 Imagen 4 Generation Complete\nPrompt: "*${promptText}*"`;
-                    appendMessageToUI('model', resText, [], null, imageUrl);
-                } else {
-                    throw new Error("Invalid image bytes returned from Imagen API.");
-                }
-            } catch (err) {
-                loadingBubble.remove();
-                appendMessageToUI('model', `⚠️ **Imagen Generation Error:** ${err.message}`);
-            }
-        }
-
-        async function synthesizeSpeechTTS(textToSpeak) {
-            try {
-                const customApiKey = document.getElementById('customApiKey')?.value.trim() || "";
-                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-tts:generateContent?key=${customApiKey}`;
-
-                const cleanPrompt = textToSpeak.replace(/```[\s\S]*?```/g, '').replace(/[*#]/g, '').slice(0, 300);
-
-                const payload = {
-                    contents: [{ parts: [{ text: `Say clearly: ${cleanPrompt}` }] }],
-                    generationConfig: {
-                        responseModalities: ["AUDIO"],
-                        speechConfig: {
-                            voiceConfig: {
-                                prebuiltVoiceConfig: { voiceName: state.selectedVoice }
-                            }
-                        }
-                    }
-                };
-
-                const response = await fetch(apiUrl, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                });
-
-                if (!response.ok) return null;
-                const result = await response.json();
-                const part = result?.candidates?.[0]?.content?.parts?.[0];
-                const base64Audio = part?.inlineData?.data;
-                const mimeType = part?.inlineData?.mimeType;
-
-                if (base64Audio && mimeType) {
-                    const sampleRateMatch = mimeType.match(/rate=(\d+)/);
-                    const sampleRate = sampleRateMatch ? parseInt(sampleRateMatch[1], 10) : 24000;
-                    
-                    const pcmData = base64ToArrayBuffer(base64Audio);
-                    const pcm16 = new Int16Array(pcmData);
-                    const wavBlob = pcmToWav(pcm16, sampleRate);
-                    return URL.createObjectURL(wavBlob);
-                }
-            } catch (e) {
-                console.warn("TTS synthesis error:", e);
-            }
-            return null;
-        }
-
-        function base64ToArrayBuffer(base64) {
-            const binaryString = window.atob(base64);
-            const len = binaryString.length;
-            const bytes = new Uint8Array(len);
-            for (let i = 0; i < len; i++) {
-                bytes[i] = binaryString.charCodeAt(i);
-            }
-            return bytes.buffer;
-        }
-
-        function pcmToWav(pcm16Data, sampleRate) {
-            const numChannels = 1;
-            const bytesPerSample = 2;
-            const blockAlign = numChannels * bytesPerSample;
-            const byteRate = sampleRate * blockAlign;
-            const dataSize = pcm16Data.length * bytesPerSample;
-            const buffer = new ArrayBuffer(44 + dataSize);
-            const view = new DataView(buffer);
-
-            /* RIFF identifier */
-            writeString(view, 0, 'RIFF');
-            view.setUint32(4, 36 + dataSize, true);
-            writeString(view, 8, 'WAVE');
-            writeString(view, 12, 'fmt ');
-            view.setUint32(16, 16, true);
-            view.setUint16(20, 1, true); // PCM format
-            view.setUint16(22, numChannels, true);
-            view.setUint32(24, sampleRate, true);
-            view.setUint32(28, byteRate, true);
-            view.setUint16(32, blockAlign, true);
-            view.setUint16(34, 16, true); // 16-bit
-            writeString(view, 36, 'data');
-            view.setUint32(40, dataSize, true);
-
-            for (let i = 0; i < pcm16Data.length; i++) {
-                view.setInt16(44 + i * 2, pcm16Data[i], true);
-            }
-            return new Blob([buffer], { type: 'audio/wav' });
-        }
-
-        function writeString(view, offset, string) {
-            for (let i = 0; i < string.length; i++) {
-                view.setUint8(offset + i, string.charCodeAt(i));
-            }
-        }
-
-        async function runStandardGeminiQuery(prompt) {
-            const loadingBubble = appendLoadingBubble("Searching web & generating response...");
-            try {
-                const res = await callGeminiApi(state.chatHistory);
-                loadingBubble.remove();
-
-                const codeBlock = extractCodeArtifact(res.text);
-                
-                let audioUrl = null;
-                if (state.ttsSpeechEnabled) {
-                    audioUrl = await synthesizeSpeechTTS(res.text);
-                }
-
-                appendMessageToUI('model', res.text, res.sources, codeBlock, null, audioUrl);
-
-                state.chatHistory.push({ role: 'model', parts: [{ text: res.text }] });
-
-                const activeSession = state.sessions.find(s => s.id === state.activeSessionId);
-                if (activeSession) {
-                    activeSession.messages.push({
-                        role: 'model',
-                        text: res.text,
-                        sources: res.sources,
-                        codeArtifact: codeBlock,
-                        audioUrl: audioUrl
-                    });
-                }
-
-                if (codeBlock && state.autoExecute) {
-                    loadIntoSandbox(codeBlock);
-                }
-            } catch (err) {
-                loadingBubble.remove();
-                appendMessageToUI('model', `⚠️ **Error processing request:** ${err.message}`);
-            }
-        }
-
-        async function runAutonomousProblemSolver(prompt) {
-            state.autonomyLoopActive = true;
-            autonomyBanner.classList.remove('hidden');
-            autonomyBanner.classList.add('flex');
-
-            updateBannerStep("Stage 1/5: Decomposing & Web Research Grounding...");
-            const thinkingContainer = appendThinkingBubble();
-
-            try {
-                thinkingContainer.addStep("Decomposing request into structured execution plan...");
-                const planPrompt = `Analyze user challenge: "${prompt}". Decompose into a 3-step action plan. Include search grounding context.`;
-                const planRes = await callGeminiApi([{ role: 'user', parts: [{ text: planPrompt }] }]);
-                thinkingContainer.addStep("Action plan grounded with live search data.", planRes.sources);
-
-                updateBannerStep("Stage 2/5: Synthesizing HTML/JS Runnable OS Artifact...");
-                thinkingContainer.addStep("Synthesizing primary standalone HTML application...");
-
-                const codeGenPrompt = `Based on request: "${prompt}" and plan:\n${planRes.text}\n\nSynthesize a complete standalone HTML file. Wrap inside a single \`\`\`html code block. Include modern UI and full interactivity.`;
-                
-                const codeRes = await callGeminiApi([
-                    ...state.chatHistory,
-                    { role: 'user', parts: [{ text: codeGenPrompt }] }
-                ]);
-
-                let currentCode = extractCodeArtifact(codeRes.text);
-
-                if (currentCode) {
-                    thinkingContainer.addStep("Executable Web OS code produced. Deploying to Sandbox...");
-                    loadIntoSandbox(currentCode);
-                }
-
-                updateBannerStep("Stage 3/5: Runtime Test & Self-Healing Loop...");
-                const maxLoops = parseInt(document.getElementById('healingDepthSlider')?.value || "4");
-                let currentLoop = 1;
-
-                while (currentLoop <= maxLoops && currentCode) {
-                    thinkingContainer.addStep(`Self-Healing Critique Loop (${currentLoop}/${maxLoops}): Checking code logic & syntax integrity...`);
-
-                    const critiquePrompt = `Critique this code solution for "${prompt}":\n\`\`\`html\n${currentCode}\n\`\`\`\nAre there bugs or layout issues? If yes, respond with "REVISED_CODE:" followed by updated \`\`\`html code. If optimal, respond with "OPTIMAL_SOLUTION".`;
-                    const critiqueRes = await callGeminiApi([{ role: 'user', parts: [{ text: critiquePrompt }] }]);
-
-                    if (critiqueRes.text.includes("OPTIMAL_SOLUTION")) {
-                        thinkingContainer.addStep(`Verification passed! Code optimal at iteration ${currentLoop}.`);
-                        break;
-                    } else if (critiqueRes.text.includes("REVISED_CODE:")) {
-                        const newCode = extractCodeArtifact(critiqueRes.text);
-                        if (newCode) {
-                            currentCode = newCode;
-                            loadIntoSandbox(currentCode);
-                            thinkingContainer.addStep(`Patch applied! Iteration ${currentLoop + 1} code loaded into Sandbox.`);
-                        }
-                    }
-                    currentLoop++;
-                }
-
-                updateBannerStep("Stage 4/5: Synthesizing Audio Narration...");
-                let audioUrl = null;
-                if (state.ttsSpeechEnabled) {
-                    audioUrl = await synthesizeSpeechTTS(codeRes.text);
-                }
-
-                updateBannerStep("Stage 5/5: Finalizing Response Presentation...");
-                thinkingContainer.addStep("Autonomous resolution complete.");
-
-                const finalResponse = `${codeRes.text}\n\n---\n### 🤖 Autonomous Execution Summary\n- **Web Grounding:** Real-time 2026 web research applied.\n- **Self-Healing Iterations:** Executed ${currentLoop - 1} critique/patch loops.\n- **Web OS Sandbox:** Rendered in split pane.`;
-
-                appendMessageToUI('model', finalResponse, codeRes.sources, currentCode, null, audioUrl);
-
-                state.chatHistory.push({ role: 'model', parts: [{ text: finalResponse }] });
-
-            } catch (err) {
-                appendMessageToUI('model', `⚠️ **Autonomous Engine Exception:** ${err.message}`);
-            } finally {
-                stopAutonomyLoop();
-            }
-        }
-
-        function updateBannerStep(text) { bannerStepText.textContent = text; }
-        function stopAutonomyLoop() {
-            state.autonomyLoopActive = false;
-            autonomyBanner.classList.add('hidden');
-            autonomyBanner.classList.remove('flex');
-        }
-
-        function extractCodeArtifact(text) {
-            const match = text.match(/```html([\s\S]*?)```/) || text.match(/```xml([\s\S]*?)```/);
-            return match && match[1] ? match[1].trim() : null;
-        }
-
-        function appendLoadingBubble(text) {
-            const bubble = document.createElement('div');
-            bubble.className = 'flex items-start gap-3 my-4 animate-pulse';
-            bubble.innerHTML = `
-                <div class="w-8 h-8 rounded-xl bg-gradient-to-tr from-blue-600 to-purple-600 flex items-center justify-center text-white text-xs font-bold shrink-0">
-                    <i class="fa-solid fa-sparkles"></i>
-                </div>
-                <div class="flex-1 bg-gemini-800/50 border border-gray-800 rounded-2xl p-4 text-xs text-gray-300 flex items-center gap-3">
-                    <i class="fa-solid fa-spinner animate-spin text-blue-400 text-sm"></i>
-                    <span>${escapeHtml(text)}</span>
-                </div>
-            `;
-            chatStream.appendChild(bubble);
-            scrollToBottom();
-            return bubble;
-        }
-
-        function appendThinkingBubble() {
-            const container = document.createElement('div');
-            container.className = 'my-4 bg-purple-950/20 border border-purple-500/30 rounded-2xl p-4 text-xs text-purple-200 space-y-2';
-            
-            const title = document.createElement('div');
-            title.className = 'font-bold flex items-center gap-2 text-purple-300 border-b border-purple-500/20 pb-2';
-            title.innerHTML = `<i class="fa-solid fa-brain-circuit text-purple-400"></i> Autonomous Thought Process Trace`;
-            
-            const stepsList = document.createElement('div');
-            stepsList.className = 'space-y-1.5 font-mono text-[11px] text-gray-300';
-
-            container.appendChild(title);
-            container.appendChild(stepsList);
-            chatStream.appendChild(container);
-            scrollToBottom();
-
-            return {
-                addStep: (msg, sources = []) => {
-                    const item = document.createElement('div');
-                    item.className = 'flex items-start gap-2';
-                    let sourcesHtml = sources && sources.length > 0 ? `<span class="text-[10px] text-emerald-400">(${sources.length} sources grounded)</span>` : '';
-                    item.innerHTML = `<span class="text-purple-400">►</span> <span>${escapeHtml(msg)} ${sourcesHtml}</span>`;
-                    stepsList.appendChild(item);
-                    scrollToBottom();
-                }
-            };
-        }
-
-        function appendMessageToUI(role, text, sources = [], codeBlock = null, imageUrl = null, audioUrl = null) {
-            const msgDiv = document.createElement('div');
-            msgDiv.className = `flex items-start gap-3.5 my-5 ${role === 'user' ? 'justify-end' : ''}`;
-
-            const formattedText = formatMarkdown(text);
-
-            if (role === 'user') {
-                let imgTag = imageUrl ? `<img src="${imageUrl}" class="mt-2 rounded-lg max-h-48 border border-gray-700 object-cover">` : '';
-                msgDiv.innerHTML = `
-                    <div class="max-w-[85%] sm:max-w-[75%] bg-blue-600 text-white rounded-2xl rounded-tr-xs px-4 py-3 text-sm shadow-md leading-relaxed">
-                        ${escapeHtml(text)}
-                        ${imgTag}
-                    </div>
-                    <div class="w-8 h-8 rounded-xl bg-gray-700 flex items-center justify-center text-white text-xs font-bold shrink-0">
-                        <i class="fa-solid fa-user"></i>
-                    </div>
-                `;
-            } else {
-                let sourcesCard = '';
-                if (sources && sources.length > 0) {
-                    sourcesCard = `
-                        <div class="mt-3 pt-2 border-t border-gray-800 text-xs">
-                            <div class="font-semibold text-emerald-400 text-[11px] mb-1 flex items-center gap-1.5">
-                                <i class="fa-solid fa-globe"></i> Web Search Grounding Sources (${sources.length})
-                            </div>
-                            <div class="flex flex-wrap gap-2">
-                                ${sources.map(s => `
-                                    <a href="${s.uri}" target="_blank" class="px-2.5 py-1 rounded-lg bg-gemini-950 border border-gray-800 hover:border-emerald-500/50 text-gray-300 hover:text-emerald-300 text-[11px] truncate max-w-[200px] inline-flex items-center gap-1">
-                                        <i class="fa-solid fa-link text-[10px] text-gray-500"></i> ${escapeHtml(s.title || s.uri)}
-                                    </a>
-                                `).join('')}
-                            </div>
-                        </div>
-                    `;
-                }
-
-                let sandboxTrigger = '';
-                if (codeBlock) {
-                    sandboxTrigger = `
-                        <div class="mt-3 p-3 rounded-xl bg-gemini-950 border border-purple-500/30 flex items-center justify-between">
-                            <div class="flex items-center gap-2 text-xs text-purple-300 font-mono">
-                                <i class="fa-solid fa-window-restore text-purple-400"></i>
-                                <span>Interactive Application Code Generated</span>
-                            </div>
-                            <button onclick="loadIntoSandbox(\`${escapeCodeForAttribute(codeBlock)}\`)" class="px-3 py-1 rounded-lg bg-purple-600 hover:bg-purple-500 text-white font-medium text-xs transition-all shadow-sm">
-                                Open in Sandbox OS
-                            </button>
-                        </div>
-                    `;
-                }
-
-                let generatedImgTag = imageUrl ? `<img src="${imageUrl}" class="mt-3 rounded-xl border border-pink-500/30 shadow-lg max-h-80 object-cover">` : '';
-                let audioTag = audioUrl ? `
-                    <div class="mt-3 p-2 rounded-xl bg-gemini-950 border border-amber-500/30 flex items-center gap-3">
-                        <i class="fa-solid fa-volume-high text-amber-400 text-base"></i>
-                        <audio controls src="${audioUrl}" class="w-full h-8"></audio>
-                    </div>
-                ` : '';
-
-                msgDiv.innerHTML = `
-                    <div class="w-8 h-8 rounded-xl bg-gradient-to-tr from-blue-600 via-purple-600 to-pink-500 flex items-center justify-center text-white text-xs font-bold shrink-0">
-                        <i class="fa-solid fa-sparkles"></i>
-                    </div>
-                    <div class="flex-1 max-w-[90%] bg-gemini-800/40 border border-gray-800/80 rounded-2xl rounded-tl-xs p-4 text-sm text-gray-100 shadow-sm space-y-2 leading-relaxed">
-                        <div>${formattedText}</div>
-                        ${generatedImgTag}
-                        ${audioTag}
-                        ${sourcesCard}
-                        ${sandboxTrigger}
-                    </div>
-                `;
-            }
-
-            chatStream.appendChild(msgDiv);
-            scrollToBottom();
-        }
-
-        function scrollToBottom() { chatStream.scrollTop = chatStream.scrollHeight; }
-
-        function formatMarkdown(text) {
-            if (!text) return '';
-            return text
-                .replace(/```([\s\S]*?)```/g, '<pre class="bg-gemini-950 p-3 rounded-xl border border-gray-800 font-mono text-xs text-emerald-400 overflow-x-auto my-2"><code>$1</code></pre>')
-                .replace(/`([^`]+)`/g, '<code class="bg-gemini-950 px-1.5 py-0.5 rounded text-blue-300 font-mono text-xs">$1</code>')
-                .replace(/\*\*(.*?)\*\*/g, '<strong class="text-white font-semibold">$1</strong>')
-                .replace(/\n/g, '<br>');
+        function clearChatSession() {
+            chatHistory = [];
+            chatMessages.innerHTML = '';
+            showToast("Chat session cleared.");
         }
 
         function escapeHtml(str) {
-            if (!str) return '';
             return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
         }
 
-        function escapeCodeForAttribute(code) {
-            return code.replace(/\\/g, '\\\\').replace(/`/g, '\\`').replace(/\$/g, '\\$');
-        }
-
-        function toggleSidebar() {
-            const sidebar = document.getElementById('sidebar');
-            const overlay = document.getElementById('sidebarOverlay');
-            sidebar.classList.toggle('-translate-x-full');
-            overlay.classList.toggle('hidden');
-        }
-
-        document.getElementById('toggleSidebarBtn').addEventListener('click', toggleSidebar);
-
-        function openSettingsModal() { document.getElementById('settingsModal').classList.remove('hidden'); }
-        function closeSettingsModal() {
-            document.getElementById('settingsModal').classList.add('hidden');
-            state.maxSelfHealDepth = parseInt(document.getElementById('healingDepthSlider').value);
-            state.autoExecute = document.getElementById('autoExecuteCheck').checked;
-            state.searchGrounding = document.getElementById('searchGroundingCheck').checked;
-            updateGroundingBadge();
-        }
-
-        function switchTab(tab) {
-            if (tab === 'image') {
-                toggleImagenMode();
-            } else if (tab === 'logs') {
-                if (!state.sandboxOpen) toggleSandboxView();
-                toggleConsoleDrawer();
-            }
+        function showToast(msg) {
+            const toast = document.createElement('div');
+            toast.className = 'fixed bottom-5 right-5 bg-blue-600 text-white text-xs px-4 py-2 rounded-xl shadow-2xl z-50 animate-bounce';
+            toast.innerText = msg;
+            document.body.appendChild(toast);
+            setTimeout(() => toast.remove(), 2500);
         }
     </script>
 </body>
