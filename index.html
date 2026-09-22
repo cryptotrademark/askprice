@@ -3,20 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Local Qwen2.5 Chatbot</title>
+    <title>DeepSeek-R1 1.5B Thinking Chatbot</title>
     <style>
-        /* --- CSS STYLES --- */
         :root {
             --bg-primary: #0f172a;
             --bg-secondary: #1e293b;
             --bg-tertiary: #334155;
             --text-primary: #f8fafc;
             --text-secondary: #94a3b8;
-            --accent: #3b82f6;
-            --accent-hover: #2563eb;
+            --accent: #8b5cf6; /* Purple for "thinking" theme */
+            --accent-hover: #7c3aed;
             --user-bubble: #2563eb;
             --ai-bubble: #334155;
             --danger: #ef4444;
+            --think-bg: rgba(139, 92, 246, 0.1);
+            --think-border: #8b5cf6;
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -33,7 +34,7 @@
 
         .app-container {
             width: 100%;
-            max-width: 800px;
+            max-width: 850px;
             height: 95vh;
             background: var(--bg-secondary);
             border-radius: 16px;
@@ -44,7 +45,6 @@
             border: 1px solid var(--bg-tertiary);
         }
 
-        /* Header */
         header {
             padding: 16px 24px;
             background: var(--bg-primary);
@@ -55,6 +55,8 @@
         }
 
         .header-title { font-size: 1.25rem; font-weight: 600; }
+        .header-sub { font-size: 0.75rem; color: var(--text-secondary); }
+        
         .status-badge {
             padding: 4px 12px;
             border-radius: 20px;
@@ -65,7 +67,6 @@
         }
         .status-badge.ready { background: #10b981; }
 
-        /* Chat Area */
         #chat-container {
             flex: 1;
             overflow-y: auto;
@@ -79,7 +80,7 @@
         .message {
             display: flex;
             gap: 12px;
-            max-width: 85%;
+            max-width: 90%;
             animation: fadeIn 0.3s ease-out;
         }
 
@@ -108,7 +109,7 @@
         .bubble {
             padding: 12px 16px;
             border-radius: 16px;
-            line-height: 1.5;
+            line-height: 1.6;
             white-space: pre-wrap;
             word-wrap: break-word;
         }
@@ -116,18 +117,37 @@
         .user .bubble { background: var(--user-bubble); border-bottom-right-radius: 4px; }
         .ai .bubble { background: var(--ai-bubble); border-bottom-left-radius: 4px; }
 
-        /* Footer / Input Area */
+        /* Special styling for the "Thinking" blocks */
+        .thinking-block {
+            background: var(--think-bg);
+            border-left: 3px solid var(--think-border);
+            padding: 10px 14px;
+            margin-bottom: 12px;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            border-radius: 0 8px 8px 0;
+            font-style: italic;
+            line-height: 1.5;
+        }
+        
+        .thinking-label {
+            font-weight: bold;
+            color: var(--accent);
+            font-style: normal;
+            display: block;
+            margin-bottom: 4px;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
         footer {
             padding: 16px 24px;
             background: var(--bg-primary);
             border-top: 1px solid var(--bg-tertiary);
         }
 
-        #progress-container {
-            margin-bottom: 12px;
-            display: none;
-        }
-
+        #progress-container { margin-bottom: 12px; display: none; }
         #progress-container.active { display: block; }
 
         .progress-bar {
@@ -152,10 +172,7 @@
             text-align: center;
         }
 
-        .input-group {
-            display: flex;
-            gap: 12px;
-        }
+        .input-group { display: flex; gap: 12px; }
 
         #user-input {
             flex: 1;
@@ -197,7 +214,6 @@
         }
         .clear-btn:hover { border-color: var(--danger); color: var(--danger); }
 
-        /* Scrollbar */
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: var(--bg-tertiary); border-radius: 3px; }
@@ -208,8 +224,8 @@
 <div class="app-container">
     <header>
         <div>
-            <div class="header-title">Qwen2.5-1.5B Local AI</div>
-            <div style="font-size: 0.75rem; color: var(--text-secondary);">Runs 100% in your browser via WebGPU</div>
+            <div class="header-title">DeepSeek-R1 1.5B Thinking AI</div>
+            <div class="header-sub">Runs 100% locally in your browser via WebGPU</div>
         </div>
         <div style="display: flex; gap: 8px; align-items: center;">
             <button class="clear-btn" id="clear-btn" disabled>Clear Chat</button>
@@ -217,9 +233,7 @@
         </div>
     </header>
 
-    <main id="chat-container">
-        <!-- Messages will be injected here -->
-    </main>
+    <main id="chat-container"></main>
 
     <footer>
         <div id="progress-container">
@@ -236,10 +250,8 @@
 </div>
 
 <script type="module">
-    // --- JAVASCRIPT LOGIC ---
     import * as webllm from "https://esm.run/@mlc-ai/web-llm";
 
-    // DOM Elements
     const chatContainer = document.getElementById('chat-container');
     const chatForm = document.getElementById('chat-form');
     const userInput = document.getElementById('user-input');
@@ -254,18 +266,16 @@
     let isGenerating = false;
     let chatHistory = [];
 
-    // 1. Initialize WebLLM Engine
     async function init() {
         if (!navigator.gpu) {
             statusBadge.textContent = "WebGPU Not Supported";
             statusBadge.style.background = "var(--danger)";
-            addMessage('ai', "Error: Your browser does not support WebGPU. Please use the latest version of Chrome or Edge on a supported device (Windows/Mac/Android with modern GPU).");
+            addMessage('ai', "Error: Your browser does not support WebGPU. Please use Chrome or Edge on a modern device.");
             return;
         }
 
         engine = new webllm.MLCEngine();
         
-        // Track download progress
         engine.setInitProgressCallback((report) => {
             progressContainer.classList.add('active');
             progressFill.style.width = `${(report.progress * 100).toFixed(1)}%`;
@@ -273,21 +283,19 @@
         });
 
         try {
-            // Using Qwen2.5 1.5B (Quantized to 4-bit for browser performance)
-            // If you want a smarter but larger model, change to "Qwen2.5-3B-Instruct-q4f16_1-MLC"
-            await engine.reload("Qwen2.5-1.5B-Instruct-q4f16_1-MLC");
+            // DEEPSEEK-R1-DISTILL-QWEN-1.5B: The ultimate small "thinking" model
+            await engine.reload("DeepSeek-R1-Distill-Qwen-1.5B-q4f16_1-MLC");
             
-            // Setup complete
             progressContainer.classList.remove('active');
             statusBadge.textContent = "Ready";
             statusBadge.classList.add('ready');
             userInput.disabled = false;
             sendBtn.disabled = false;
             clearBtn.disabled = false;
-            userInput.placeholder = "Ask me anything...";
+            userInput.placeholder = "Ask a complex question to see it think...";
             userInput.focus();
             
-            addMessage('ai', "Hello! I am Qwen2.5-1.5B running locally in your browser. How can I help you today?");
+            addMessage('ai', "Hello! I am DeepSeek-R1 1.5B. I will show you my step-by-step thinking process before giving you the final answer. What would you like to know?");
         } catch (err) {
             statusBadge.textContent = "Load Failed";
             statusBadge.style.background = "var(--danger)";
@@ -295,7 +303,6 @@
         }
     }
 
-    // 2. Handle Chat Submission
     chatForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         if (isGenerating) return;
@@ -308,39 +315,43 @@
         sendBtn.disabled = true;
         sendBtn.textContent = "...";
 
-        // Add user message to UI and history
         addMessage('user', text);
         chatHistory.push({ role: "user", content: text });
 
-        // Create empty AI bubble for streaming
         const aiBubble = addMessage('ai', '');
 
         try {
-            // Add a system prompt to encourage "thinking" / logical reasoning
+            // System prompt to enforce the "thinking" behavior
             const messages = [
-                { role: "system", content: "You are a helpful, logical, and concise AI assistant. Think step-by-step before answering complex questions." },
+                { 
+                    role: "system", 
+                    content: "You are an expert AI assistant. For every response, you must first show your step-by-step reasoning enclosed in <think> and </think> tags. After your reasoning is complete, provide your final, clear answer." 
+                },
                 ...chatHistory
             ];
 
             const stream = await engine.chat.completions.create({
                 messages: messages,
                 stream: true,
-                temperature: 0.7,
+                temperature: 0.6, // Lower temp for better reasoning
             });
 
             let fullText = "";
             for await (const chunk of stream) {
                 const delta = chunk.choices[0].delta.content || "";
                 fullText += delta;
-                aiBubble.textContent = fullText;
+                
+                // Render raw text while streaming
+                aiBubble.innerHTML = formatThinkingText(fullText);
                 scrollToBottom();
             }
 
-            // Save AI response to history
+            // Final format pass to ensure clean HTML
+            aiBubble.innerHTML = formatThinkingText(fullText);
             chatHistory.push({ role: "assistant", content: fullText });
 
         } catch (err) {
-            aiBubble.textContent = `Error generating response: ${err.message}`;
+            aiBubble.textContent = `Error: ${err.message}`;
         }
 
         isGenerating = false;
@@ -349,14 +360,28 @@
         userInput.focus();
     });
 
-    // 3. Clear Chat (Crucial for freeing up browser RAM)
     clearBtn.addEventListener('click', () => {
         chatContainer.innerHTML = '';
         chatHistory = [];
-        addMessage('ai', "Chat cleared. Memory freed. How can I help you?");
+        addMessage('ai', "Chat cleared. Memory freed. What's next?");
     });
 
     // --- Utility Functions ---
+    
+    // Parses <think> tags into styled HTML blocks
+    function formatThinkingText(text) {
+        // Escape HTML to prevent XSS
+        let safeText = text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+        
+        // Replace the escaped think tags with styled divs
+        safeText = safeText.replace(
+            /&lt;think&gt;(.*?)&lt;\/think&gt;/gs, 
+            '<div class="thinking-block"><span class="thinking-label">💭 Thinking Process</span>$1</div>'
+        );
+        
+        return safeText;
+    }
+
     function addMessage(role, text) {
         const msgDiv = document.createElement('div');
         msgDiv.className = `message ${role}`;
@@ -367,21 +392,20 @@
 
         const bubble = document.createElement('div');
         bubble.className = 'bubble';
-        bubble.textContent = text;
+        bubble.innerHTML = text; // Using innerHTML to support thinking blocks
 
         msgDiv.appendChild(avatar);
         msgDiv.appendChild(bubble);
         chatContainer.appendChild(msgDiv);
         scrollToBottom();
         
-        return bubble; // Return bubble so we can stream text into it
+        return bubble;
     }
 
     function scrollToBottom() {
         chatContainer.scrollTop = chatContainer.scrollHeight;
     }
 
-    // Start the app
     init();
 </script>
 
