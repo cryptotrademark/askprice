@@ -856,9 +856,7 @@
             modelStatus.textContent = `Loading... ${(report.progress * 100).toFixed(0)}%`;
         });
 
-        try {
-            // FIXED: Using Qwen2.5-1.5B-Instruct which is guaranteed to be in the WebLLM registry
-            await engine.reload("Qwen2.5-1.5B-Instruct-q4f16_1-MLC"); 
+            await engine.reload("Qwen2.5-1.5B-Instruct-q4f32_1-MLC"); 
             
             progressBar.style.display = 'none';
             modelStatus.textContent = 'Ready';
