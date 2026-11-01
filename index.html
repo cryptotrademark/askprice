@@ -1,1 +1,495 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Autonomous In-Browser Telegram AI Bot</title>
+  <style>
+    :root {
+      --bg: #090d16;
+      --card-bg: #111827;
+      --border: #1f2937;
+      --accent: #3b82f6;
+      --accent-hover: #2563eb;
+      --success: #10b981;
+      --danger: #ef4444;
+      --warning: #f59e0b;
+      --text: #f3f4f6;
+      --text-muted: #9ca3af;
+    }
 
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, monospace;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      display: flex;
+      justify-content: center;
+      padding: 24px 16px;
+      min-height: 100vh;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 950px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+    }
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    h1 { font-size: 1.35rem; font-weight: 700; }
+    h2 { font-size: 0.95rem; color: var(--text-muted); text-transform: uppercase; margin-bottom: 12px; }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 14px;
+      border-radius: 9999px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      background: rgba(239, 68, 68, 0.15);
+      color: var(--danger);
+      border: 1px solid var(--danger);
+    }
+
+    .badge.active {
+      background: rgba(16, 185, 129, 0.15);
+      color: var(--success);
+      border-color: var(--success);
+    }
+
+    .badge.loading {
+      background: rgba(245, 158, 11, 0.15);
+      color: var(--warning);
+      border-color: var(--warning);
+    }
+
+    .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: currentColor;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    @media (max-width: 768px) {
+      .grid { grid-template-columns: 1fr; }
+    }
+
+    .form-group {
+      margin-bottom: 12px;
+    }
+
+    label {
+      display: block;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+    }
+
+    input, select, textarea {
+      width: 100%;
+      padding: 10px 12px;
+      background: #030712;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text);
+      font-size: 0.85rem;
+    }
+
+    input:focus, select:focus, textarea:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
+
+    .progress-container {
+      margin-top: 10px;
+      background: #030712;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      overflow: hidden;
+      display: none;
+    }
+
+    .progress-bar {
+      height: 8px;
+      background: var(--accent);
+      width: 0%;
+      transition: width 0.2s ease;
+    }
+
+    .progress-text {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      padding: 6px 8px;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .btn-group {
+      display: flex;
+      gap: 10px;
+      margin-top: 14px;
+    }
+
+    button {
+      flex: 1;
+      padding: 12px;
+      border-radius: 6px;
+      border: none;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .btn-run { background: var(--success); color: #042f2e; }
+    .btn-run:hover { background: #059669; }
+    .btn-stop { background: var(--danger); color: white; }
+    .btn-stop:hover { background: #dc2626; }
+    button:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+
+    .stat-card {
+      background: #030712;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px;
+      text-align: center;
+    }
+
+    .stat-num { font-size: 1.3rem; font-weight: 700; color: var(--accent); }
+    .stat-desc { font-size: 0.75rem; color: var(--text-muted); margin-top: 4px; }
+
+    .console {
+      height: 320px;
+      background: #030712;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px;
+      overflow-y: auto;
+      font-size: 0.8rem;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .log-line { line-height: 1.4; word-break: break-all; }
+    .log-info { color: #60a5fa; }
+    .log-success { color: #34d399; }
+    .log-warn { color: #fbbf24; }
+    .log-error { color: #f87171; }
+    .log-dim { color: #6b7280; }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <div class="card header">
+    <div>
+      <h1>Client-Side Telegram AI Host</h1>
+      <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 4px;">
+        100% In-Browser Execution via WebGPU (No Server / No Ollama needed)
+      </p>
+    </div>
+    <div id="statusBadge" class="badge">
+      <span class="dot"></span>
+      <span id="statusLabel">OFFLINE</span>
+    </div>
+  </div>
+
+  <div class="stats">
+    <div class="stat-card">
+      <div id="statProcessed" class="stat-num">0</div>
+      <div class="stat-desc">Messages Answered</div>
+    </div>
+    <div class="stat-card">
+      <div id="statSpeed" class="stat-num">--</div>
+      <div class="stat-desc">Tokens / Sec</div>
+    </div>
+    <div class="stat-card">
+      <div id="statDevice" class="stat-num">GPU</div>
+      <div class="stat-desc">Compute Engine</div>
+    </div>
+  </div>
+
+  <div class="grid">
+    <div class="card">
+      <h2>Engine Configuration</h2>
+      <div class="form-group">
+        <label>Telegram Bot Token</label>
+        <input type="password" id="botToken" value="8992628864:AAGSGKAXfTLhEdCy8mwqPnLtfAL-JZPpM5A" />
+      </div>
+      <div class="form-group">
+        <label>Hugging Face Model ID</label>
+        <input type="text" id="modelId" value="onnx-community/gemma-3-270m-it" />
+        <small style="font-size: 0.72rem; color: var(--text-muted); display: block; margin-top: 4px;">
+          Optimized ONNX variants: <code>onnx-community/gemma-3-270m-it</code> or <code>HuggingFaceTB/SmolLM2-135M-Instruct</code>
+        </small>
+      </div>
+      <div class="form-group">
+        <label>Device Acceleration</label>
+        <select id="deviceSelector">
+          <option value="webgpu">WebGPU (Fastest - Dedicated/Integrated GPU)</option>
+          <option value="wasm">WASM (CPU Fallback - Slower)</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>System Instructions</label>
+        <textarea id="systemPrompt" rows="2">You are a concise, smart AI assistant responding directly to Telegram chat queries.</textarea>
+      </div>
+
+      <div class="progress-container" id="progressWrapper">
+        <div class="progress-bar" id="progressBar"></div>
+        <div class="progress-text">
+          <span id="progressFile">Downloading weights...</span>
+          <span id="progressPercent">0%</span>
+        </div>
+      </div>
+
+      <div class="btn-group">
+        <button id="btnStart" class="btn-run" onclick="initAndStart()">Download & Run</button>
+        <button id="btnStop" class="btn-stop" onclick="stopBot()" disabled>Stop</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Console & Inference Logs</h2>
+      <div class="console" id="logConsole">
+        <div class="log-line log-dim">[System ready. Click "Download & Run" to load weights into browser.]</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Transformers.js v3 ESM -->
+<script type="module">
+  import { pipeline, env } from 'https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.3.3';
+
+  // Force remote models from Hugging Face CDN directly
+  env.allowLocalModels = false;
+
+  let generator = null;
+  let isRunning = false;
+  let telegramOffset = 0;
+  let processedCount = 0;
+  let abortController = null;
+  let wakeLock = null;
+
+  window.log = function(msg, type = "info") {
+    const box = document.getElementById("logConsole");
+    const line = document.createElement("div");
+    const t = new Date().toLocaleTimeString();
+    line.className = `log-line log-${type}`;
+    line.innerText = `[${t}] ${msg}`;
+    box.appendChild(line);
+    box.scrollTop = box.scrollHeight;
+  };
+
+  function updateBadge(state, label) {
+    const badge = document.getElementById("statusBadge");
+    const text = document.getElementById("statusLabel");
+    badge.className = `badge ${state}`;
+    text.innerText = label;
+  }
+
+  // Prevent browser tab from going to sleep
+  async function requestWakeLock() {
+    try {
+      if ('wakeLock' in navigator) {
+        wakeLock = await navigator.wakeLock.request('screen');
+        log("Screen Wake Lock acquired (tab sleep prevented).", "dim");
+      }
+    } catch (_) {}
+  }
+
+  window.initAndStart = async function() {
+    const token = document.getElementById("botToken").value.trim();
+    const model = document.getElementById("modelId").value.trim();
+    const device = document.getElementById("deviceSelector").value;
+
+    if (!token) return alert("Bot token is required.");
+
+    document.getElementById("btnStart").disabled = true;
+    document.getElementById("progressWrapper").style.display = "block";
+    updateBadge("loading", "LOADING MODEL");
+    log(`Initializing pipeline for ${model} on ${device}...`, "info");
+
+    const progressBar = document.getElementById("progressBar");
+    const progressFile = document.getElementById("progressFile");
+    const progressPercent = document.getElementById("progressPercent");
+
+    try {
+      // Initialize Transformers.js pipeline directly inside the browser
+      generator = await pipeline('text-generation', model, {
+        device: device,
+        dtype: device === 'webgpu' ? 'q4f16' : 'q4',
+        progress_callback: (item) => {
+          if (item.status === 'progress') {
+            const p = Math.round(item.progress || 0);
+            progressBar.style.width = `${p}%`;
+            progressFile.innerText = item.file || 'Downloading weights...';
+            progressPercent.innerText = `${p}%`;
+          } else if (item.status === 'done') {
+            progressFile.innerText = `Cached: ${item.file}`;
+          }
+        }
+      });
+
+      log("Model weights successfully downloaded and cached in IndexedDB!", "success");
+      document.getElementById("statDevice").innerText = device.toUpperCase();
+      document.getElementById("btnStop").disabled = false;
+      isRunning = true;
+      abortController = new AbortController();
+
+      await requestWakeLock();
+      updateBadge("active", "RUNNING & POLLING");
+      pollTelegram(token);
+
+    } catch (err) {
+      log(`Initialization error: ${err.message}`, "error");
+      updateBadge("", "ERROR");
+      document.getElementById("btnStart").disabled = false;
+      document.getElementById("progressWrapper").style.display = "none";
+
+      if (device === "webgpu") {
+        log("Tip: If WebGPU failed, switch Device Acceleration to 'WASM' and try again.", "warn");
+      }
+    }
+  };
+
+  window.stopBot = function() {
+    isRunning = false;
+    if (abortController) abortController.abort();
+    if (wakeLock) wakeLock.release();
+    updateBadge("", "OFFLINE");
+    document.getElementById("btnStart").disabled = false;
+    document.getElementById("btnStop").disabled = true;
+    log("Polling stopped. Bot is offline.", "dim");
+  };
+
+  async function pollTelegram(token) {
+    while (isRunning) {
+      try {
+        const url = `https://api.telegram.org/bot${token}/getUpdates?offset=${telegramOffset}&timeout=20`;
+        const res = await fetch(url, { signal: abortController.signal });
+
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+        const data = await res.json();
+        if (data.ok && data.result.length > 0) {
+          for (const update of data.result) {
+            telegramOffset = update.update_id + 1;
+            if (update.message && update.message.text) {
+              await processMessage(update.message, token);
+            }
+          }
+        }
+      } catch (err) {
+        if (!isRunning) break;
+        log(`Polling notice: ${err.message}`, "dim");
+        await new Promise((r) => setTimeout(r, 3000));
+      }
+    }
+  }
+
+  async function processMessage(msg, token) {
+    const chatId = msg.chat.id;
+    const userText = msg.text;
+    const userFrom = msg.from.username || msg.from.first_name || "User";
+    const systemPrompt = document.getElementById("systemPrompt").value.trim();
+
+    log(`Received from @${userFrom}: "${userText}"`, "info");
+
+    // Display 'typing...' indicator on Telegram
+    sendChatAction(token, chatId, "typing");
+
+    try {
+      const messages = [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: userText }
+      ];
+
+      const t0 = performance.now();
+      
+      // Client-side local inference directly in the browser
+      const output = await generator(messages, {
+        max_new_tokens: 120,
+        temperature: 0.7,
+        do_sample: true
+      });
+
+      const t1 = performance.now();
+      const generated = output[0].generated_text.at(-1).content;
+      const tokPerSec = (100 / ((t1 - t0) / 1000)).toFixed(1);
+
+      document.getElementById("statSpeed").innerText = tokPerSec;
+      processedCount++;
+      document.getElementById("statProcessed").innerText = processedCount;
+
+      log(`Generated reply in ${((t1 - t0) / 1000).toFixed(2)}s: "${generated.slice(0, 50)}..."`, "success");
+
+      // Reply back to user via Telegram
+      await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ chat_id: chatId, text: generated })
+      });
+
+    } catch (err) {
+      log(`Inference failed: ${err.message}`, "error");
+      await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ 
+          chat_id: chatId, 
+          text: "Sorry, an internal in-browser inference error occurred while generating the answer." 
+        })
+      });
+    }
+  }
+
+  async function sendChatAction(token, chatId, action) {
+    try {
+      await fetch(`https://api.telegram.org/bot${token}/sendChatAction`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ chat_id: chatId, action: action })
+      });
+    } catch (_) {}
+  }
+</script>
+
+</body>
+</html>
